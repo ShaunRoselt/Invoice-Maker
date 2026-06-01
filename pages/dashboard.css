@@ -1,0 +1,5 @@
+/* dashboard page */
+#dash-stats .stat-card .stat-icon.i-total { background: var(--brand-soft); color: var(--brand); }
+#dash-stats .stat-card .stat-icon.i-paid { background: var(--success-soft); color: var(--success); }
+#dash-stats .stat-card .stat-icon.i-draft { background: var(--surface-2); color: var(--text-muted); }
+#dash-stats .stat-card .stat-icon.i-out { background: var(--warning-soft); color: var(--warning); }

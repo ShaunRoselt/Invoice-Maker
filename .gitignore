@@ -1,0 +1,8 @@
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Runtime artifacts
+*.log

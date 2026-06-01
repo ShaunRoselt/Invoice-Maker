@@ -1,0 +1,5 @@
+/* invoices list */
+#inv-list-card { overflow-x: auto; }
+#inv-list .row-actions { display: flex; gap: 4px; justify-content: flex-end; opacity: 0; transition: opacity .12s; }
+#inv-list tr:hover .row-actions { opacity: 1; }
+#inv-list .row-actions .btn { padding: 6px 9px; }

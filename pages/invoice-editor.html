@@ -1,0 +1,104 @@
+<div class="page-header">
+  <div>
+    <h1 id="ie-title" style="margin-top:8px">Edit invoice</h1>
+    <p class="subtitle"><i class="bi bi-cursor-text"></i> Click any highlighted part of the invoice to edit it directly.
+      <span id="ie-status-tag" class="ie-status"></span></p>
+  </div>
+  <div class="page-actions">
+    <select class="select" id="ie-status" style="width:auto">
+      <option value="draft">Draft</option>
+      <option value="sent">Sent</option>
+      <option value="paid">Paid</option>
+      <option value="overdue">Overdue</option>
+    </select>
+    <button class="btn btn-secondary" data-act="pdf"><i class="bi bi-file-earmark-pdf"></i> Export PDF</button>
+    <button class="btn btn-primary" data-act="save"><i class="bi bi-check-lg"></i> Save</button>
+  </div>
+</div>
+
+<div class="ie-layout">
+  <!-- Editable invoice canvas -->
+  <div class="ie-preview-col a4-preview-stage">
+    <div id="ie-paper" class="a4-paper-host"></div>
+  </div>
+
+  <!-- Compact settings the invoice itself can't hold -->
+  <div class="ie-panel">
+    <div class="card card-pad ie-section">
+      <div class="flex-between gap-12">
+        <h3 class="section-title">Business</h3>
+        <button class="btn btn-ghost btn-sm" data-act="manage-businesses"><i class="bi bi-building"></i> Manage</button>
+      </div>
+      <div class="field"><select class="select" id="f-business"></select></div>
+      <button class="btn btn-secondary btn-sm" data-act="clear-business" style="width:100%"><i class="bi bi-x-lg"></i>
+        Clear business info</button>
+    </div>
+
+    <div class="card card-pad ie-section">
+      <div class="flex-between gap-12">
+        <h3 class="section-title">Client</h3>
+        <button class="btn btn-ghost btn-sm" data-act="manage-clients"><i class="bi bi-people"></i> Manage</button>
+      </div>
+      <div class="field"><select class="select" id="f-client"></select></div>
+      <button class="btn btn-secondary btn-sm" data-act="clear-client" style="width:100%"><i class="bi bi-x-lg"></i>
+        Clear client info</button>
+    </div>
+
+    <div class="card card-pad ie-section">
+      <h3 class="section-title">Template</h3>
+      <div class="field"><select class="select" id="f-template"></select></div>
+    </div>
+
+    <div class="card card-pad ie-section">
+      <h3 class="section-title">Invoice settings</h3>
+      <div class="field"><label>Currency</label>
+        <select class="select" id="f-currency" data-search-placeholder="Search currencies">
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+          <option value="JPY">JPY</option>
+          <option value="CNY">CNY</option>
+          <option value="AUD">AUD</option>
+          <option value="CAD">CAD</option>
+          <option value="NZD">NZD</option>
+          <option value="SGD">SGD</option>
+          <option value="HKD">HKD</option>
+          <option value="SEK">SEK</option>
+          <option value="NOK">NOK</option>
+          <option value="DKK">DKK</option>
+          <option value="CHF">CHF</option>
+          <option value="INR">INR</option>
+          <option value="ZAR">ZAR</option>
+          <option value="BRL">BRL</option>
+          <option value="MXN">MXN</option>
+          <option value="ARS">ARS</option>
+          <option value="CLP">CLP</option>
+          <option value="COP">COP</option>
+          <option value="PEN">PEN</option>
+          <option value="TRY">TRY</option>
+          <option value="RUB">RUB</option>
+          <option value="KRW">KRW</option>
+          <option value="PLN">PLN</option>
+          <option value="ILS">ILS</option>
+          <option value="AED">AED</option>
+          <option value="MYR">MYR</option>
+          <option value="IDR">IDR</option>
+          <option value="PHP">PHP</option>
+          <option value="THB">THB</option>
+          <option value="VND">VND</option>
+        </select>
+      </div>
+      <div class="field-row" id="f-tax-row">
+        <div class="field"><label>Tax rate (%)</label><input class="input" id="f-tax" type="number" min="0" step="any">
+        </div>
+        <div class="field"><label>Discount</label><input class="input" id="f-discount" type="number" min="0" step="any">
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-danger btn-sm" data-act="delete" style="width:100%"><i class="bi bi-trash"></i> Delete
+      invoice</button>
+  </div>
+</div>
+
+<input type="file" id="ie-logo-input" accept="image/*" hidden>

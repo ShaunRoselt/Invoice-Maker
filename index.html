@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roselt Invoice Generator</title>
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+  <!-- Apply saved theme before paint to avoid a flash -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('roseltInvoiceGenerator_v1_theme');
+        if (t === 'system' || !t) t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="index.css" />
+
+  <!-- PDF export -->
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js" defer></script>
+</head>
+
+<body>
+  <div id="app-root">
+    <app-header></app-header>
+    <div class="app-body">
+      <app-sidebar></app-sidebar>
+      <main id="app" class="app-main" aria-live="polite"></main>
+    </div>
+  </div>
+
+  <im-toast></im-toast>
+  <app-dialog></app-dialog>
+
+  <!-- Core libraries (order matters; plain global scripts, no modules) -->
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/storage.js"></script>
+  <script src="assets/js/state.js"></script>
+  <script src="assets/js/doc.js"></script>
+  <script src="assets/js/templates.js"></script>
+  <script src="assets/js/pdf.js"></script>
+  <script src="assets/js/routing.js"></script>
+
+  <!-- Web components -->
+  <script src="components/toast.js"></script>
+  <script src="components/app-dialog.js"></script>
+  <script src="components/app-header.js"></script>
+  <script src="components/app-sidebar.js"></script>
+  <script src="components/contact-form.js"></script>
+  <script src="components/template-card.js"></script>
+  <script src="components/line-items-editor.js"></script>
+  <script src="components/invoice-preview.js"></script>
+  <script src="components/app-select.js"></script>
+
+  <!-- Built-in invoice templates (one file per template) -->
+  <script src="templates/classic.js"></script>
+  <script src="templates/modern.js"></script>
+  <script src="templates/bold-sidebar.js"></script>
+  <script src="templates/orange-wave.js"></script>
+
+  <!-- Bootstrap the app -->
+  <script src="index.js"></script>
+</body>
+
+</html>

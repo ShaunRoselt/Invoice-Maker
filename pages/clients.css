@@ -1,0 +1,9 @@
+/* clients */
+#client-list-card { overflow-x: auto; }
+#client-list .row-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+}
+#client-list .row-actions .btn { padding: 6px 9px; }
+#client-list .table-long { max-width: 260px; white-space: pre-line; }
