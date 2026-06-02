@@ -17,12 +17,24 @@
     .app-select-label-text { font-weight:600; color:var(--text-muted); font-size:.85rem; white-space:nowrap; }\
     .app-select-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex:0 1 auto; min-width:0; font-weight:500; }\
     .app-select-caret { flex: 0 0 auto; color: var(--text-muted); font-size: .72rem; line-height: 1; margin-left: 8px; transition: transform .15s; }\
+    /* Panel itself should allow visible overflow; inner options list handles scrolling */\
     .app-select-panel { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 2600; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); box-shadow: var(--shadow); padding: 6px; max-height: none; overflow: visible; }\
     .app-select-search { width: 100%; min-height: 34px; margin: 0 0 6px; padding: 7px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--text); font: inherit; font-size: .86rem; outline: none; transition: border-color .12s, box-shadow .12s; }\
     .app-select-search:focus { border-color: var(--focus-border); box-shadow: 0 0 0 3px var(--focus-glow); }\
     .app-select-search::placeholder { color: var(--text-faint); }\
-    .app-select-options { max-height: none; overflow-y: visible; scrollbar-width: none; -ms-overflow-style: none; }\
-    .app-select-options::-webkit-scrollbar { display: none; }\
+    /* Options list - use a thin themed scrollbar instead of hiding native scrollbars */\
+    .app-select-options { max-height: none; overflow-y: auto; scrollbar-width: thin; -ms-overflow-style: auto; }\
+    /* WebKit-based browsers */\
+    .app-select-options::-webkit-scrollbar { width: 10px; }\
+    .app-select-options::-webkit-scrollbar-track { background: transparent; border-radius: 8px; }\
+    .app-select-options::-webkit-scrollbar-thumb { background: rgba(0,0,0,.18); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }\
+    .app-select-options::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.28); }\
+    /* Firefox */\
+    .app-select-options { scrollbar-color: rgba(0,0,0,.18) transparent; }\
+    /* Dark theme tweaks */\
+    :host-context([data-theme="dark"]) .app-select-options::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); }\
+    :host-context([data-theme="dark"]) .app-select-options::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.14); }\
+    :host-context([data-theme="dark"]) .app-select-options { scrollbar-color: rgba(255,255,255,.08) transparent; }\
     .app-select-option { min-height: 34px; display: flex; align-items: center; gap:10px; padding: 8px 12px; border-radius: var(--radius-sm); color: var(--text); font-size: .9rem; cursor: pointer; user-select: none; transition: background .12s, color .12s; }\
     .app-select-option:hover, .app-select-option[aria-selected="true"] { background: var(--surface-hover); }\
     .app-select-dot { width:10px; height:10px; border-radius:50%; display:inline-block; flex:0 0 auto; margin-right:6px; }\
@@ -102,7 +114,12 @@
     sync() {
       if (!this._rendered || !this._select) return;
       var selected = this._select.options[this._select.selectedIndex];
-      this._valueEl.textContent = optionText(selected) || this.getAttribute('placeholder') || 'Select...';
+      var display = optionText(selected) || this.getAttribute('placeholder') || 'Select...';
+      if (selected && this._select && this._select.hasAttribute('data-show-currency-symbol') && window.App && App.util && typeof App.util.currencySymbol === 'function') {
+        var sym = App.util.currencySymbol(selected.value || optionText(selected));
+        if (sym) display = sym + ' ' + display;
+      }
+      this._valueEl.textContent = display;
       // label (left) support: host attribute `data-label` or `label`
       var lbl = this.getAttribute('data-label') || this.getAttribute('label') || '';
       if (lbl && this._left) {
@@ -139,6 +156,7 @@
       this._panel.style.bottom = 'auto';
       this._panel.style.width = 'auto';
       this._panel.style.maxHeight = '';
+      if (this._optionsEl) this._optionsEl.style.maxHeight = '';
 
       // Force layout and measure
       var requiredWidth = Math.ceil(this._panel.getBoundingClientRect().width) || 0;
@@ -172,15 +190,15 @@
       var spaceBelow = Math.max(0, vh - rect.bottom - 8);
       var spaceAbove = Math.max(0, rect.top - 8);
       if (spaceBelow >= spaceAbove) {
-        // open below
+        // open below — constrain the inner options list
         this._panel.style.top = (rect.bottom + 6) + 'px';
         this._panel.style.bottom = 'auto';
-        this._panel.style.maxHeight = (spaceBelow) + 'px';
+        if (this._optionsEl) this._optionsEl.style.maxHeight = Math.max(80, spaceBelow - 12) + 'px';
       } else {
-        // open above
+        // open above — constrain the inner options list
         this._panel.style.top = 'auto';
         this._panel.style.bottom = (vh - rect.top + 6) + 'px';
-        this._panel.style.maxHeight = (spaceAbove) + 'px';
+        if (this._optionsEl) this._optionsEl.style.maxHeight = Math.max(80, spaceAbove - 12) + 'px';
       }
 
       this.setAttribute('open', '');
@@ -204,6 +222,7 @@
       this._panel.style.right = '';
       this._panel.style.width = '';
       this._panel.style.maxHeight = '';
+      if (this._optionsEl) this._optionsEl.style.maxHeight = '';
     }
 
     toggle() {
@@ -218,9 +237,14 @@
       Array.prototype.forEach.call(this._select.options, (option) => {
         var text = optionText(option);
         if (q && text.toLowerCase().indexOf(q) === -1 && String(option.value).toLowerCase().indexOf(q) === -1) return;
+        var displayText = text;
+        if (this._select && this._select.hasAttribute('data-show-currency-symbol') && window.App && App.util && typeof App.util.currencySymbol === 'function') {
+          var sym = App.util.currencySymbol(option.value || text);
+          if (sym) displayText = sym + ' ' + text;
+        }
         var dot = '';
         if (option.value && colorMap[option.value]) dot = '<span class="app-select-dot" style="background:' + colorMap[option.value] + '"></span>';
-        html += '<div class="app-select-option" role="option" tabindex="-1" data-value="' + App.util.escapeHtml(option.value) + '" aria-selected="' + (option.selected ? 'true' : 'false') + '">' + dot + App.util.escapeHtml(text) + '</div>';
+        html += '<div class="app-select-option" role="option" tabindex="-1" data-value="' + App.util.escapeHtml(option.value) + '" aria-selected="' + (option.selected ? 'true' : 'false') + '">' + dot + App.util.escapeHtml(displayText) + '</div>';
       });
       this._optionsEl.innerHTML = html || '<div class="app-select-empty">No matches</div>';
       this._optionsEl.querySelectorAll('.app-select-option').forEach((item) => {

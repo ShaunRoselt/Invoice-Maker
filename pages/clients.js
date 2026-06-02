@@ -10,6 +10,17 @@ App.pages.register('clients', (function () {
     return client.name || client.contactName || 'Unnamed client';
   }
 
+  function confirmDelete(client) {
+    var dialogEl = document.querySelector('app-dialog');
+    if (!dialogEl || typeof dialogEl.confirm !== 'function') return Promise.resolve(false);
+    return dialogEl.confirm('Delete client ' + displayName(client) + '?', {
+      title: 'Confirm deletion',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      danger: true
+    });
+  }
+
   function valueFor(client, key) {
     if (key === 'name') return displayName(client);
     return client[key] || '';
@@ -114,10 +125,12 @@ App.pages.register('clients', (function () {
   function deleteClient(id) {
     var client = App.store.getClient(id);
     if (!client) return;
-    if (!confirm('Delete client ' + displayName(client) + '?')) return;
-    App.store.deleteClient(id);
-    renderList();
-    App.toast('Client deleted', 'info');
+    confirmDelete(client).then(function (confirmed) {
+      if (!confirmed) return;
+      App.store.deleteClient(id);
+      renderList();
+      App.toast('Client deleted', 'info');
+    });
   }
 
   function mount(root) {

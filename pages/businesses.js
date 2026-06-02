@@ -7,7 +7,18 @@ App.pages.register('businesses', (function () {
   var sort = { key: 'name', dir: 'asc' };
 
   function displayName(business) {
-    return business.name || 'Unnamed business';
+    return business.name || business.contactName || 'Unnamed business';
+  }
+
+  function confirmDelete(business) {
+    var dialogEl = document.querySelector('app-dialog');
+    if (!dialogEl || typeof dialogEl.confirm !== 'function') return Promise.resolve(false);
+    return dialogEl.confirm('Delete business ' + displayName(business) + '?', {
+      title: 'Confirm deletion',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      danger: true
+    });
   }
 
   function valueFor(business, key) {
@@ -59,17 +70,22 @@ App.pages.register('businesses', (function () {
     }
 
     el.innerHTML = '<table class="data-table"><thead><tr>\
-      <th>' + sortHead('logo', 'Logo') + '</th>\
+      <th style="width:72px"></th>\
       <th>' + sortHead('name', 'Business') + '</th>\
+      <th>' + sortHead('contactName', 'Contact') + '</th>\
       <th>' + sortHead('email', 'Email') + '</th>\
       <th>' + sortHead('phone', 'Phone') + '</th>\
       <th>' + sortHead('taxId', 'Tax ID') + '</th>\
-      <th>' + sortHead('address', 'Address') + '</th>\
+      <th>' + sortHead('address', 'Billing address') + '</th>\
       <th></th>\
       </tr></thead><tbody>' + list.map(function (business) {
+      var logoHtml = business.logo
+        ? '<img class="list-logo" src="' + App.util.escapeHtml(business.logo) + '" alt="logo">'
+        : '<div class="logo-placeholder"><i class="bi bi-image"></i></div>';
       return '<tr data-id="' + business.id + '">\
-          <td>' + (business.logo ? '<span class="table-logo"><img src="' + App.util.escapeHtml(business.logo) + '" alt=""></span>' : '<span class="text-muted">-</span>') + '</td>\
+          <td class="logo-col">' + logoHtml + '</td>\
           <td><strong>' + App.util.escapeHtml(displayName(business)) + '</strong></td>\
+          <td>' + App.util.escapeHtml(business.contactName || '-') + '</td>\
           <td>' + App.util.escapeHtml(business.email || '-') + '</td>\
           <td>' + App.util.escapeHtml(business.phone || '-') + '</td>\
           <td>' + App.util.escapeHtml(business.taxId || '-') + '</td>\
@@ -112,10 +128,12 @@ App.pages.register('businesses', (function () {
   function deleteBusiness(id) {
     var business = App.store.getBusiness(id);
     if (!business) return;
-    if (!confirm('Delete business ' + displayName(business) + '?')) return;
-    App.store.deleteBusiness(id);
-    renderList();
-    App.toast('Business deleted', 'info');
+    confirmDelete(business).then(function (confirmed) {
+      if (!confirmed) return;
+      App.store.deleteBusiness(id);
+      renderList();
+      App.toast('Business deleted', 'info');
+    });
   }
 
   function mount(root) {

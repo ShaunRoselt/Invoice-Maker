@@ -7,6 +7,17 @@ App.pages.register('business-editor', (function () {
 
   function displayName(b) { return b.name || 'Unnamed business'; }
 
+  function confirmDelete(currentBusiness) {
+    var dialogEl = document.querySelector('app-dialog');
+    if (!dialogEl || typeof dialogEl.confirm !== 'function') return Promise.resolve(false);
+    return dialogEl.confirm('Delete business ' + displayName(currentBusiness) + '?', {
+      title: 'Confirm deletion',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      danger: true
+    });
+  }
+
   function writeForm() {
     rootEl.querySelector('#business-editor-title').textContent = business.createdAt ? 'Edit business' : 'New business';
     rootEl.querySelector('[data-act="delete"]').style.display = business.createdAt ? '' : 'none';
@@ -42,14 +53,16 @@ App.pages.register('business-editor', (function () {
     var del = root.querySelector('[data-act="delete"]');
     if (del) del.addEventListener('click', function () {
       if (!business.createdAt) return;
-      if (!confirm('Delete business ' + displayName(business) + '?')) return;
-      App.store.deleteBusiness(business.id);
-      App.toast('Business deleted', 'info');
-      App.router.navigate({ page: 'businesses' });
+      confirmDelete(business).then(function (confirmed) {
+        if (!confirmed) return;
+        App.store.deleteBusiness(business.id);
+        App.toast('Business deleted', 'info');
+        App.router.navigate({ page: 'businesses' });
+      });
     });
   }
 
   function unmount() { rootEl = null; business = null; }
 
   return { mount: mount, unmount: unmount };
-})();
+})());

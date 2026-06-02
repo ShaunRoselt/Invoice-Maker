@@ -7,6 +7,17 @@ App.pages.register('client-editor', (function () {
 
   function displayName(c) { return c.name || c.contactName || 'Unnamed client'; }
 
+  function confirmDelete(currentClient) {
+    var dialogEl = document.querySelector('app-dialog');
+    if (!dialogEl || typeof dialogEl.confirm !== 'function') return Promise.resolve(false);
+    return dialogEl.confirm('Delete client ' + displayName(currentClient) + '?', {
+      title: 'Confirm deletion',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      danger: true
+    });
+  }
+
   function writeForm() {
     rootEl.querySelector('#client-editor-title').textContent = client.createdAt ? 'Edit client' : 'New client';
     rootEl.querySelector('[data-act="delete"]').style.display = client.createdAt ? '' : 'none';
@@ -42,14 +53,16 @@ App.pages.register('client-editor', (function () {
     var del = root.querySelector('[data-act="delete"]');
     if (del) del.addEventListener('click', function () {
       if (!client.createdAt) return;
-      if (!confirm('Delete client ' + displayName(client) + '?')) return;
-      App.store.deleteClient(client.id);
-      App.toast('Client deleted', 'info');
-      App.router.navigate({ page: 'clients' });
+      confirmDelete(client).then(function (confirmed) {
+        if (!confirmed) return;
+        App.store.deleteClient(client.id);
+        App.toast('Client deleted', 'info');
+        App.router.navigate({ page: 'clients' });
+      });
     });
   }
 
   function unmount() { rootEl = null; client = null; }
 
   return { mount: mount, unmount: unmount };
-})();
+})());

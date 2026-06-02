@@ -7,6 +7,7 @@
   gap: 24px;
   align-items: start;
 }
+
 .ie-preview-col {
   position: sticky;
   top: 0;
@@ -15,15 +16,51 @@
   scrollbar-gutter: stable both-edges;
   cursor: default;
 }
-.ie-preview-col.pan-ready { cursor: grab; }
-.ie-preview-col.panning { cursor: grabbing; }
 
-.ie-status { font-size: .8rem; font-weight: 600; margin-left: 6px; }
-.ie-status.saving { color: var(--text-muted, #94a3b8); }
-.ie-status.saved { color: var(--success, #16a34a); }
+.ie-preview-col.a4-preview-stage {
+  display: block;
+}
 
-.ie-panel { display: flex; flex-direction: column; gap: 16px; }
-.ie-section { padding: 18px 20px; }
+.ie-preview-col .a4-paper-host {
+  width: max-content;
+  min-width: 100%;
+}
+
+.ie-preview-col .invoice-paper {
+  margin: 0 auto;
+}
+
+.ie-preview-col.pan-ready {
+  cursor: grab;
+}
+
+.ie-preview-col.panning {
+  cursor: grabbing;
+}
+
+.ie-status {
+  font-size: .8rem;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+.ie-status.saving {
+  color: var(--text-muted, #94a3b8);
+}
+
+.ie-status.saved {
+  color: var(--success, #16a34a);
+}
+
+.ie-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ie-section {
+  padding: 18px 20px;
+}
 
 /* ---- Inline edit affordances on the paper ---- */
 .a4-paper-host .doc-edit {
@@ -33,10 +70,25 @@
   min-width: 14px;
   display: inline-block;
 }
-.a4-paper-host .doc-field.inline .doc-edit { display: inline; }
-.a4-paper-host .doc-edit:hover { box-shadow: 0 0 0 2px var(--brand-soft); background: rgba(99,102,241,.05); }
-.a4-paper-host .doc-edit:focus { outline: none; box-shadow: 0 0 0 2px var(--brand); background: #fff; }
-.a4-paper-host .doc-edit-date { cursor: pointer; }
+
+.a4-paper-host .doc-field.inline .doc-edit {
+  display: inline;
+}
+
+.a4-paper-host .doc-edit:hover {
+  box-shadow: 0 0 0 2px var(--brand-soft);
+  background: rgba(99, 102, 241, .05);
+}
+
+.a4-paper-host .doc-edit:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--brand);
+  background: #fff;
+}
+
+.a4-paper-host .doc-edit-date {
+  cursor: pointer;
+}
 
 /* static (template) text editable directly on the invoice */
 .a4-paper-host .doc-edit-static {
@@ -44,43 +96,116 @@
   border-radius: 3px;
   transition: box-shadow .1s, background .1s;
 }
-.a4-paper-host .doc-edit-static:hover { box-shadow: 0 0 0 2px var(--brand-soft); background: rgba(99,102,241,.05); }
-.a4-paper-host .doc-edit-static:focus { outline: none; box-shadow: 0 0 0 2px var(--brand); background: #fff; }
+
+.a4-paper-host .doc-edit-static:hover {
+  box-shadow: 0 0 0 2px var(--brand-soft);
+  background: rgba(99, 102, 241, .05);
+}
+
+.a4-paper-host .doc-edit-static:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--brand);
+  background: #fff;
+}
+
 .a4-paper-host .doc-field-empty:before {
   content: attr(data-placeholder);
   color: #b9c2cd;
   font-style: italic;
 }
-.a4-paper-host .doc-edit-date.doc-field-empty:before { font-style: italic; }
+
+.a4-paper-host .doc-edit-date.doc-field-empty:before {
+  font-style: italic;
+}
 
 /* logo */
-.a4-paper-host [data-logo]:hover { box-shadow: 0 0 0 2px var(--brand-soft); border-radius: 4px; }
+.a4-paper-host [data-logo]:hover {
+  box-shadow: 0 0 0 2px var(--brand-soft);
+  border-radius: 4px;
+}
 
 /* editable line items */
-.a4-paper-host .doc-edit-cell { cursor: text; }
-.a4-paper-host .doc-edit-cell:hover { box-shadow: inset 0 0 0 2px var(--brand-soft); }
-.a4-paper-host .doc-edit-cell:focus { outline: none; box-shadow: inset 0 0 0 2px var(--brand); background: #fff; }
-.a4-paper-host .doc-edit-cell:empty:before { content: attr(data-placeholder); color: #c2c9d4; }
-.a4-paper-host .doc-x-col { width: 30px; }
+.a4-paper-host .doc-edit-cell {
+  cursor: text;
+}
+
+.a4-paper-host .doc-edit-cell:hover {
+  box-shadow: inset 0 0 0 2px var(--brand-soft);
+}
+
+.a4-paper-host .doc-edit-cell:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--brand);
+  background: #fff;
+}
+
+.a4-paper-host .doc-edit-cell:empty:before {
+  content: attr(data-placeholder);
+  color: #c2c9d4;
+}
+
+.a4-paper-host .doc-x-col {
+  width: 30px;
+}
+
 .a4-paper-host .doc-li-del {
-  border: none; background: transparent; color: #c2c9d4; cursor: pointer; padding: 4px; border-radius: 5px;
-  opacity: 0; transition: opacity .1s;
+  border: none;
+  background: transparent;
+  color: #c2c9d4;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 5px;
+  opacity: 0;
+  transition: opacity .1s;
 }
-.a4-paper-host tr:hover .doc-li-del { opacity: 1; }
-.a4-paper-host .doc-li-del:hover { color: var(--danger); background: var(--danger-soft); }
-.a4-paper-host .doc-additem td { border: none; padding-top: 10px; }
+
+.a4-paper-host tr:hover .doc-li-del {
+  opacity: 1;
+}
+
+.a4-paper-host .doc-li-del:hover {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.a4-paper-host .doc-additem td {
+  border: none;
+  padding-top: 10px;
+}
+
 .a4-paper-host .doc-additem span {
-  display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: var(--brand);
-  font-size: .85rem; font-weight: 600; padding: 4px 8px; border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--brand);
+  font-size: .85rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
 }
-.a4-paper-host .doc-additem span:hover { background: var(--brand-soft); }
+
+.a4-paper-host .doc-additem span:hover {
+  background: var(--brand-soft);
+}
 
 /* inline date input */
 .a4-paper-host .ie-date-input {
-  font: inherit; color: inherit; border: 1px solid var(--brand); border-radius: 4px; padding: 1px 4px; background: #fff;
+  font: inherit;
+  color: inherit;
+  border: 1px solid var(--brand);
+  border-radius: 4px;
+  padding: 1px 4px;
+  background: #fff;
 }
 
 @media (max-width: 1080px) {
-  .ie-layout { grid-template-columns: 1fr; }
-  .ie-preview-col { position: static; max-height: none; }
+  .ie-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ie-preview-col {
+    position: static;
+    max-height: none;
+  }
 }
