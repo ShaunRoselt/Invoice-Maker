@@ -7,29 +7,33 @@
 (function () {
   var STYLE = '\
     :host { display: block; position: relative; width: 100%; font-family: inherit; }\
-    :host([data-inline]) { display: inline-block; width: auto; min-width: 150px; vertical-align: middle; }\
-    .app-select-trigger { width: 100%; min-height: 40px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; border: 1px solid var(--border-strong); border-radius: 0; background: var(--surface-2); color: var(--text); font: inherit; font-size: .92rem; line-height: 1.2; text-align: left; cursor: pointer; transition: border-color .12s, box-shadow .12s, background .12s; }\
-    .app-select-trigger:hover { background: color-mix(in srgb, var(--surface-2) 94%, var(--text) 6%); }\
+    :host([data-inline]) { display: inline-block; width: auto; min-width: 0; vertical-align: middle; }\
+    .app-select-trigger { width: 100%; min-height: 40px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 11px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: inherit; font-size: .92rem; line-height: 1.2; text-align: left; cursor: pointer; transition: border-color .12s, box-shadow .12s, background .12s; }\
+    .app-select-trigger:hover { background: var(--surface-hover); }\
     .app-select-trigger:focus { outline: none; border-color: var(--focus-border); box-shadow: 0 0 0 3px var(--focus-glow); }\
     .app-select-trigger[disabled] { cursor: not-allowed; opacity: .62; }\
-    .app-select-left { display:flex; align-items:center; gap:8px; color:var(--text-muted); flex:0 0 auto; padding: 7px 10px; border-right: 1px solid rgba(255,255,255,.08); border-radius: 0; margin-right: 8px; background: rgba(255,255,255,.03); }\
-    .app-select-left i { font-size:1rem; color:var(--text-muted); }\
-    .app-select-label-text { font-weight:600; color:var(--text-muted); font-size:.9rem; white-space:nowrap; }\
-    .app-select-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex:1 1 auto; min-width:0; }\
-    .app-select-caret { flex: 0 0 auto; color: var(--text-muted); font-size: .78rem; line-height: 1; margin-left: 8px; }\
-    .app-select-panel { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 2600; border: 1px solid var(--border); border-radius: 0; background: var(--surface); color: var(--text); box-shadow: var(--shadow); padding: 6px; max-height: none; overflow: visible; }\
-    .app-select-search { width: 100%; min-height: 32px; margin: 0 0 5px; padding: 7px 10px; border: 1px solid var(--focus-border); border-radius: 7px; background: var(--surface); color: var(--text); font: inherit; font-size: .86rem; outline: none; box-shadow: 0 0 0 2px var(--focus-glow); }\
+    .app-select-left { display:flex; align-items:center; gap:6px; color:var(--text-muted); flex:0 0 auto; padding: 4px 8px; border-right: 1px solid var(--border-strong); border-radius: 6px; margin-right: 6px; background: var(--surface-2); }\
+    .app-select-left i { font-size:.95rem; color:var(--text-muted); }\
+    .app-select-label-text { font-weight:600; color:var(--text-muted); font-size:.85rem; white-space:nowrap; }\
+    .app-select-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex:0 1 auto; min-width:0; font-weight:500; }\
+    .app-select-caret { flex: 0 0 auto; color: var(--text-muted); font-size: .72rem; line-height: 1; margin-left: 8px; transition: transform .15s; }\
+    .app-select-panel { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 2600; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); box-shadow: var(--shadow); padding: 6px; max-height: none; overflow: visible; }\
+    .app-select-search { width: 100%; min-height: 34px; margin: 0 0 6px; padding: 7px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--text); font: inherit; font-size: .86rem; outline: none; transition: border-color .12s, box-shadow .12s; }\
+    .app-select-search:focus { border-color: var(--focus-border); box-shadow: 0 0 0 3px var(--focus-glow); }\
     .app-select-search::placeholder { color: var(--text-faint); }\
     .app-select-options { max-height: none; overflow-y: visible; scrollbar-width: none; -ms-overflow-style: none; }\
     .app-select-options::-webkit-scrollbar { display: none; }\
-    .app-select-option { min-height: 34px; display: flex; align-items: center; gap:10px; padding: 10px 14px; border-radius: 0; color: var(--text); font-size: .9rem; cursor: pointer; user-select: none; transition: background .12s; }\
+    .app-select-option { min-height: 34px; display: flex; align-items: center; gap:10px; padding: 8px 12px; border-radius: var(--radius-sm); color: var(--text); font-size: .9rem; cursor: pointer; user-select: none; transition: background .12s, color .12s; }\
     .app-select-option:hover, .app-select-option[aria-selected="true"] { background: var(--surface-hover); }\
     .app-select-dot { width:10px; height:10px; border-radius:50%; display:inline-block; flex:0 0 auto; margin-right:6px; }\
-    .app-select-empty { padding: 14px 15px; color: var(--text-muted); font-size: .88rem; }\
+    .app-select-empty { padding: 14px 15px; color: var(--text-muted); font-size: .88rem; text-align:center; }\
     [hidden] { display: none !important; }\
+    :host([open]) .app-select-caret { transform: rotate(180deg); }\
     :host-context([data-theme="dark"]) .app-select-trigger { background: var(--surface-hover); border-color: var(--border); }\
+    :host-context([data-theme="dark"]) .app-select-trigger:hover { background: rgba(255,255,255,.08); }\
     :host-context([data-theme="dark"]) .app-select-panel { background: #202128; border-color: var(--border); box-shadow: 0 18px 44px rgba(0,0,0,.48); }\
-    :host-context([data-theme="dark"]) .app-select-search { background: #1f2027; }\
+    :host-context([data-theme="dark"]) .app-select-left { background: rgba(255,255,255,.05); border-color: var(--border); }\
+    :host-context([data-theme="dark"]) .app-select-search { background: rgba(255,255,255,.04); border-color: var(--border); }\
   ';
 
   function optionText(option) {
@@ -47,12 +51,12 @@
       if (this._rendered) return;
       this.shadowRoot.innerHTML = '<style>' + STYLE + '</style>' +
         '<button class="app-select-trigger" type="button" role="combobox" aria-expanded="false">' +
-          '<span class="app-select-left" hidden><i class="bi bi-filter" aria-hidden="true"></i><span class="app-select-label-text"></span></span>' +
-          '<span class="app-select-value"></span><span class="app-select-caret" aria-hidden="true">▾</span>' +
+        '<span class="app-select-left" hidden><i class="bi bi-filter" aria-hidden="true"></i><span class="app-select-label-text"></span></span>' +
+        '<span class="app-select-value"></span><span class="app-select-caret" aria-hidden="true">▾</span>' +
         '</button>' +
         '<div class="app-select-panel" hidden>' +
-          '<input class="app-select-search" type="search" autocomplete="off">' +
-          '<div class="app-select-options" role="listbox"></div>' +
+        '<input class="app-select-search" type="search" autocomplete="off">' +
+        '<div class="app-select-options" role="listbox"></div>' +
         '</div>';
       this._trigger = this.shadowRoot.querySelector('.app-select-trigger');
       this._left = this.shadowRoot.querySelector('.app-select-left');
@@ -117,7 +121,69 @@
       this._search.value = '';
       this._search.placeholder = this._select.getAttribute('data-search-placeholder') || 'Search options';
       this._renderOptions('');
+
+      // Show panel so it can be measured, then position it fixed to avoid
+      // clipping when inside scrollable/overflowing containers (eg sidebar).
       this._panel.hidden = false;
+      // compute trigger position relative to viewport
+      var rect = this._trigger.getBoundingClientRect();
+      var vw = window.innerWidth || document.documentElement.clientWidth;
+      var vh = window.innerHeight || document.documentElement.clientHeight;
+
+      // Temporarily move the panel offscreen to measure its intrinsic width
+      // (accounts for search input, dots, labels, etc.). Then clamp to viewport.
+      this._panel.style.position = 'fixed';
+      this._panel.style.left = '-9999px';
+      this._panel.style.top = '-9999px';
+      this._panel.style.right = 'auto';
+      this._panel.style.bottom = 'auto';
+      this._panel.style.width = 'auto';
+      this._panel.style.maxHeight = '';
+
+      // Force layout and measure
+      var requiredWidth = Math.ceil(this._panel.getBoundingClientRect().width) || 0;
+
+      // Also ensure we account for the widest child (search input / options)
+      try {
+        var childMax = 0;
+        this._panel.querySelectorAll('.app-select-option, .app-select-search, .app-select-empty').forEach(function (c) {
+          var w = Math.ceil(c.scrollWidth || c.getBoundingClientRect().width || 0);
+          if (w > childMax) childMax = w;
+        });
+        if (childMax > requiredWidth) requiredWidth = childMax + 16; // small padding
+      } catch (e) { /* ignore measurement errors */ }
+
+      // Ensure it's at least as wide as the trigger
+      if (requiredWidth < rect.width) requiredWidth = Math.ceil(rect.width);
+
+      // Don't exceed viewport with small margin
+      var margin = 8;
+      var maxAllowed = Math.max(120, vw - (margin * 2));
+      if (requiredWidth > maxAllowed) requiredWidth = maxAllowed;
+
+      // Set final width and compute left clamped to viewport
+      this._panel.style.width = requiredWidth + 'px';
+      var left = rect.left;
+      if (left + requiredWidth > vw - margin) left = Math.max(margin, vw - requiredWidth - margin);
+      if (left < margin) left = margin;
+      this._panel.style.left = left + 'px';
+
+      // Decide whether to open below or above depending on available space
+      var spaceBelow = Math.max(0, vh - rect.bottom - 8);
+      var spaceAbove = Math.max(0, rect.top - 8);
+      if (spaceBelow >= spaceAbove) {
+        // open below
+        this._panel.style.top = (rect.bottom + 6) + 'px';
+        this._panel.style.bottom = 'auto';
+        this._panel.style.maxHeight = (spaceBelow) + 'px';
+      } else {
+        // open above
+        this._panel.style.top = 'auto';
+        this._panel.style.bottom = (vh - rect.top + 6) + 'px';
+        this._panel.style.maxHeight = (spaceAbove) + 'px';
+      }
+
+      this.setAttribute('open', '');
       this._trigger.setAttribute('aria-expanded', 'true');
       document.addEventListener('pointerdown', this._onDocumentPointerDown);
       setTimeout(() => this._search.focus(), 0);
@@ -126,8 +192,18 @@
     close() {
       if (!this._rendered) return;
       this._panel.hidden = true;
+      this.removeAttribute('open');
       this._trigger.setAttribute('aria-expanded', 'false');
       document.removeEventListener('pointerdown', this._onDocumentPointerDown);
+
+      // Clear any positioning styles applied when opened
+      this._panel.style.position = '';
+      this._panel.style.left = '';
+      this._panel.style.top = '';
+      this._panel.style.bottom = '';
+      this._panel.style.right = '';
+      this._panel.style.width = '';
+      this._panel.style.maxHeight = '';
     }
 
     toggle() {

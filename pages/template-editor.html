@@ -11,19 +11,21 @@
   </div>
 
   <div class="te2-shell">
-    <aside class="te2-left">
-      <div class="te2-rail-title">Components</div>
-      <div class="te2-palette" id="te-palette"></div>
-      <div class="te2-rail-title">Merge fields</div>
-      <p class="insp-hint" style="margin:0 4px 8px">Drag a field onto the page to insert live data.</p>
-      <div class="te2-fields" id="te-fields"></div>
+    <aside class="te2-left" id="te-left">
+      <div class="te2-search">
+        <i class="bi bi-search"></i>
+        <input type="text" id="te-search" placeholder="Search components…" autocomplete="off">
+      </div>
+      <div class="te2-components" id="te-components"></div>
     </aside>
+    <div class="te2-splitter" id="te-splitter-left"></div>
 
     <main class="te2-center">
       <div class="te2-toolbar" id="te-toolbar"></div>
       <div class="te2-canvas" id="te-canvas"></div>
     </main>
 
+    <div class="te2-splitter" id="te-splitter-right"></div>
     <aside class="te2-right" id="te-inspector"></aside>
   </div>
 </div>

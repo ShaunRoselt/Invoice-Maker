@@ -56,10 +56,19 @@ App.pages.register('invoice-editor', (function () {
     fit();
   }
 
+  var paperZoom = 1;
+
   function fit() {
     var stage = rootEl.querySelector('.ie-preview-col');
     var paper = rootEl.querySelector('#ie-paper .invoice-paper');
-    App.util.fitA4Paper(stage, paper);
+    var autoZoom = App.util.fitA4Paper(stage, paper);
+    paperZoom = autoZoom;
+  }
+
+  function setPaperZoom(delta) {
+    paperZoom = Math.max(0.25, Math.min(3, paperZoom + delta));
+    var paper = rootEl.querySelector('#ie-paper .invoice-paper');
+    if (paper) paper.style.zoom = String(paperZoom);
   }
 
   // Repaint values that derive from line items (amounts + totals) without
@@ -378,14 +387,99 @@ App.pages.register('invoice-editor', (function () {
 
     _resize = App.util.debounce(fit, 120);
     window.addEventListener('resize', _resize);
+
+    // Mouse-wheel zoom on the invoice preview (Ctrl/Cmd + wheel).
+    var stage = root.querySelector('.ie-preview-col');
+    if (stage) {
+      stage.addEventListener('wheel', function (e) {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          var delta = e.deltaY > 0 ? -0.1 : 0.1;
+          setPaperZoom(delta);
+        }
+      }, { passive: false });
+
+      // Click-and-drag pan on invoice preview.
+      initInvoicePan(stage);
+    }
   }
 
   var _resize;
   function unmount() {
     if (_resize) window.removeEventListener('resize', _resize);
+    destroyInvoicePan();
     if (invoice) App.store.saveInvoice(invoice);
     invoice = model = rootEl = null;
     scheduleSave = null;
+  }
+
+  /* ---------------- invoice pan ---------------- */
+  var invoicePanState = null;
+  var invoicePanCleanup = null;
+
+  function initInvoicePan(stageEl) {
+    function setPanReady(ready) {
+      stageEl.classList.toggle('pan-ready', ready);
+    }
+
+    function onMouseDown(e) {
+      // Only pan with Ctrl + left mouse.
+      if (e.button !== 0 || !e.ctrlKey) return;
+      invoicePanState = { startX: e.clientX, startY: e.clientY, scrollLeft: stageEl.scrollLeft, scrollTop: stageEl.scrollTop };
+      stageEl.classList.add('panning');
+      e.preventDefault();
+    }
+
+    function onMouseMove(e) {
+      if (!invoicePanState) return;
+      if ((e.buttons & 1) === 0 || !e.ctrlKey) { onMouseUp(); return; }
+      var dx = e.clientX - invoicePanState.startX;
+      var dy = e.clientY - invoicePanState.startY;
+      stageEl.scrollLeft = invoicePanState.scrollLeft - dx;
+      stageEl.scrollTop = invoicePanState.scrollTop - dy;
+    }
+
+    function onMouseUp() {
+      invoicePanState = null;
+      stageEl.classList.remove('panning');
+    }
+
+    function onKeyDown(e) {
+      if (e.key === 'Control') setPanReady(true);
+    }
+
+    function onKeyUp(e) {
+      if (e.key === 'Control') {
+        setPanReady(false);
+        onMouseUp();
+      }
+    }
+
+    function onBlur() {
+      setPanReady(false);
+      onMouseUp();
+    }
+
+    stageEl.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', onBlur);
+
+    invoicePanCleanup = function () {
+      stageEl.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', onBlur);
+    };
+  }
+
+  function destroyInvoicePan() {
+    if (invoicePanCleanup) { invoicePanCleanup(); invoicePanCleanup = null; }
+    invoicePanState = null;
   }
 
   return { mount: mount, unmount: unmount };

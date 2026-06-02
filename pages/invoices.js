@@ -166,12 +166,14 @@ App.pages.register('invoices', (function () {
     var search = root.querySelector('#inv-search');
     var statusSel = root.querySelector('#inv-status');
     var appSelectEl = root.querySelector('#inv-status-select');
+    // Reflect initial params into the native select so any attached app-select
+    // component will pick up the correct selected value when it syncs.
+    if (statusSel) statusSel.value = statusFilter || '';
     // If an inline app-select placeholder exists, attach the native select to it
     if (statusSel && appSelectEl && typeof appSelectEl.attachSelect === 'function') {
       try { appSelectEl.attachSelect(statusSel); } catch (e) { console.error('app-select attach failed', e); }
     }
     if (search && query) search.value = query;
-    if (statusSel) statusSel.value = statusFilter || '';
 
     var newBtn = root.querySelector('[data-act="new"]');
     if (newBtn) {

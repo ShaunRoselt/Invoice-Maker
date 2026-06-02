@@ -1,5 +1,118 @@
 /* dashboard page */
-#dash-stats .stat-card .stat-icon.i-total { background: var(--brand-soft); color: var(--brand); }
-#dash-stats .stat-card .stat-icon.i-paid { background: var(--success-soft); color: var(--success); }
-#dash-stats .stat-card .stat-icon.i-draft { background: var(--surface-2); color: var(--text-muted); }
-#dash-stats .stat-card .stat-icon.i-out { background: var(--warning-soft); color: var(--warning); }
+#dash-stats .stat-card .stat-icon.i-total {
+    background: var(--brand-soft);
+    color: var(--brand);
+}
+
+#dash-stats .stat-card .stat-icon.i-paid {
+    background: var(--success-soft);
+    color: var(--success);
+}
+
+#dash-stats .stat-card .stat-icon.i-sent {
+    background: var(--brand-soft);
+    color: var(--brand);
+}
+
+#dash-stats .stat-card .stat-icon.i-overdue {
+    background: var(--danger-soft);
+    color: var(--danger);
+}
+
+#dash-stats .stat-card .stat-icon.i-out {
+    background: var(--warning-soft);
+    color: var(--warning);
+}
+
+#dash-stats .stat-card .stat-icon.i-draft {
+    background: var(--surface-2);
+    color: var(--text-muted);
+}
+
+/* Charts area */
+#dash-charts {
+    margin-top: 24px;
+}
+#dash-charts h2 {
+    margin: 0 0 8px 0;
+    font-size: 1.05rem;
+    color: var(--text);
+}
+
+/* Charts.css wrapper - required for proper chart sizing */
+#dash-chart-wrapper {
+    width: 100%;
+    max-width: 900px;
+    height: 320px;
+    margin: 0;
+    position: relative;
+    padding: 8px 0;
+}
+
+#dash-chart-wrapper .charts-css {
+    width: 100%;
+    height: 100%;
+}
+
+#dash-chart-wrapper .charts-css caption {
+    text-align: left;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Ensure chart data text is visible and properly positioned */
+#dash-chart-wrapper .charts-css .data {
+    font-size: 0.75rem;
+    white-space: nowrap;
+    font-weight: 600;
+    padding: 2px 6px;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    background: rgba(0,0,0,0.2);
+    border-radius: 4px;
+    margin: 4px;
+}
+
+/* Dark theme adjustments for chart */
+[data-theme="dark"] #dash-chart-wrapper .charts-css {
+    --chart-bg-color: transparent;
+    --primary-axis-color: var(--border-strong);
+    --secondary-axes-color: var(--border);
+    --data-axes-color: var(--border);
+}
+
+/* Ensure chart labels are visible */
+#dash-chart-wrapper .charts-css.show-labels tbody tr th {
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* Hide data text for zero-value bars to avoid clutter */
+#dash-chart-wrapper .charts-css tbody tr td[style*="--size:0"] .data,
+#dash-chart-wrapper .charts-css tbody tr td[style*="--size: 0"] .data {
+    display: none;
+}
+
+/* Ensure column chart bars have proper spacing and rounded tops */
+#dash-chart-wrapper .charts-css.column tbody tr td {
+    border-radius: 6px 6px 0 0;
+}
+
+/* Add some breathing room around the chart */
+#dash-charts {
+    margin-top: 24px;
+    padding: 16px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+#dash-charts h2 {
+    margin: 0 0 16px 0;
+    font-size: 1.05rem;
+    color: var(--text);
+    font-weight: 600;
+}

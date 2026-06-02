@@ -96,12 +96,20 @@ App.pages.register('template-editor', (function () {
     el.classList.toggle('empty-ph', empty);
   }
 
+  var canvasZoom = 1;
+
   function fitCanvas() {
     if (!paperFrame) return;
     var avail = canvas.clientWidth - 56;
-    var scale = Math.min(1, avail / 794);
-    if (scale <= 0) scale = 1;
+    var autoScale = Math.min(1, avail / 794);
+    if (autoScale <= 0) autoScale = 1;
+    var scale = autoScale * canvasZoom;
     paperFrame.style.zoom = scale;
+  }
+
+  function setCanvasZoom(delta) {
+    canvasZoom = Math.max(0.25, Math.min(3, canvasZoom + delta));
+    fitCanvas();
   }
 
   /* ---------------- selection ---------------- */
@@ -238,43 +246,148 @@ App.pages.register('template-editor', (function () {
 
   /* ---------------- left rail ---------------- */
   function buildPalette() {
-    var pal = rootEl.querySelector('#te-palette');
-    pal.innerHTML = '';
-    App.doc.PALETTE.forEach(function (item) {
-      var b = document.createElement('div');
-      b.className = 'te2-paitem';
-      b.setAttribute('draggable', 'true');
-      b.innerHTML = '<i class="bi ' + item.icon + '"></i><span>' + item.label + '</span>';
-      b.addEventListener('click', function () { addBlock(item.type); });
-      b.addEventListener('dragstart', function (e) { dnd = { newType: item.type }; e.dataTransfer.effectAllowed = 'copy'; e.dataTransfer.setData('text/plain', item.type); });
-      b.addEventListener('dragend', clearDnd);
-      pal.appendChild(b);
+    var wrap = rootEl.querySelector('#te-components');
+    wrap.innerHTML = '';
+
+    var SECTIONS = [
+      {
+        title: 'Layout',
+        open: true,
+        items: [
+          { type: 'heading', label: 'Heading', icon: 'bi-type-h1', kind: 'block' },
+          { type: 'text', label: 'Text', icon: 'bi-fonts', kind: 'block' },
+          { type: 'image', label: 'Image / Logo', icon: 'bi-image', kind: 'block' },
+          { type: 'columns', label: 'Columns', icon: 'bi-layout-three-columns', kind: 'block' },
+          { type: 'divider', label: 'Divider', icon: 'bi-dash-lg', kind: 'block' },
+          { type: 'spacer', label: 'Spacer', icon: 'bi-arrows-expand', kind: 'block' }
+        ]
+      },
+      {
+        title: 'Invoice',
+        open: true,
+        items: [
+          { type: 'items', label: 'Line items table', icon: 'bi-table', kind: 'block' },
+          { type: 'totals', label: 'Totals block', icon: 'bi-calculator', kind: 'block' },
+          { type: 'field', label: 'Custom field', icon: 'bi-input-cursor', kind: 'block' }
+        ]
+      },
+      {
+        title: 'Your business',
+        open: false,
+        items: [
+          { binding: 'seller.name', label: 'Business name', icon: 'bi-building', kind: 'field' },
+          { binding: 'seller.address', label: 'Business address', icon: 'bi-geo-alt', kind: 'field' },
+          { binding: 'seller.email', label: 'Business email', icon: 'bi-envelope', kind: 'field' },
+          { binding: 'seller.phone', label: 'Business phone', icon: 'bi-telephone', kind: 'field' },
+          { binding: 'seller.taxId', label: 'Tax ID', icon: 'bi-receipt', kind: 'field' }
+        ]
+      },
+      {
+        title: 'Client',
+        open: false,
+        items: [
+          { binding: 'client.name', label: 'Client name', icon: 'bi-person', kind: 'field' },
+          { binding: 'client.contactName', label: 'Client contact', icon: 'bi-person-badge', kind: 'field' },
+          { binding: 'client.address', label: 'Client address', icon: 'bi-geo', kind: 'field' },
+          { binding: 'client.email', label: 'Client email', icon: 'bi-envelope-at', kind: 'field' },
+          { binding: 'client.phone', label: 'Client phone', icon: 'bi-phone', kind: 'field' },
+          { binding: 'client.taxId', label: 'Client tax ID', icon: 'bi-receipt-cutoff', kind: 'field' }
+        ]
+      },
+      {
+        title: 'Invoice details',
+        open: false,
+        items: [
+          { binding: 'invoice.number', label: 'Invoice number', icon: 'bi-hash', kind: 'field' },
+          { binding: 'invoice.title', label: 'Document title', icon: 'bi-card-heading', kind: 'field' },
+          { binding: 'invoice.issueDate', label: 'Issue date', icon: 'bi-calendar-event', kind: 'field' },
+          { binding: 'invoice.dueDate', label: 'Due date', icon: 'bi-calendar-check', kind: 'field' },
+          { binding: 'invoice.poNumber', label: 'PO number', icon: 'bi-upc', kind: 'field' },
+          { binding: 'invoice.notes', label: 'Notes', icon: 'bi-sticky', kind: 'field' },
+          { binding: 'invoice.paymentInstructions', label: 'Payment instructions', icon: 'bi-credit-card', kind: 'field' }
+        ]
+      },
+      {
+        title: 'Totals',
+        open: false,
+        items: [
+          { binding: 'totals.subtotal', label: 'Subtotal', icon: 'bi-cash-stack', kind: 'field' },
+          { binding: 'totals.tax', label: 'Tax amount', icon: 'bi-percent', kind: 'field' },
+          { binding: 'totals.total', label: 'Grand total', icon: 'bi-cash-coin', kind: 'field' }
+        ]
+      }
+    ];
+
+    SECTIONS.forEach(function (sec) {
+      var accordion = document.createElement('div');
+      accordion.className = 'te2-accordion' + (sec.open ? ' open' : '');
+      accordion.dataset.title = sec.title.toLowerCase();
+
+      var header = document.createElement('button');
+      header.className = 'te2-accordion-header';
+      header.type = 'button';
+      header.innerHTML = '<i class="bi bi-chevron-right"></i><span>' + sec.title + '</span>';
+      header.addEventListener('click', function () {
+        accordion.classList.toggle('open');
+      });
+
+      var body = document.createElement('div');
+      body.className = 'te2-accordion-body';
+
+      sec.items.forEach(function (item) {
+        var btn = document.createElement('button');
+        btn.className = 'te2-compitem';
+        btn.setAttribute('draggable', 'true');
+        btn.dataset.label = item.label.toLowerCase();
+        btn.innerHTML = '<i class="bi ' + item.icon + '"></i><span>' + item.label + '</span>';
+
+        if (item.kind === 'block') {
+          btn.addEventListener('click', function () { addBlock(item.type); });
+          btn.addEventListener('dragstart', function (e) {
+            dnd = { newType: item.type };
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('text/plain', item.type);
+          });
+        } else {
+          btn.addEventListener('click', function () {
+            var block = App.doc.make('field', { binding: item.binding, label: '', layout: 'stacked' }, { fontSize: 14 });
+            var sel = selectedBlock();
+            if (sel) { var ff = App.doc.findBlock(model, sel.id); ff.arr.splice(ff.index + 1, 0, block); }
+            else model.blocks.push(block);
+            selectedId = block.id; renderCanvas(); renderInspector(); renderToolbar();
+          });
+          btn.addEventListener('dragstart', function (e) {
+            dnd = { newField: item.binding };
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('text/plain', item.binding);
+          });
+        }
+        btn.addEventListener('dragend', clearDnd);
+        body.appendChild(btn);
+      });
+
+      accordion.appendChild(header);
+      accordion.appendChild(body);
+      wrap.appendChild(accordion);
     });
 
-    var fieldsWrap = rootEl.querySelector('#te-fields');
-    fieldsWrap.innerHTML = '';
-    App.doc.FIELD_GROUPS.forEach(function (g) {
-      var grp = document.createElement('div');
-      grp.className = 'te2-fieldgroup';
-      grp.innerHTML = '<div class="gl">' + g.group + '</div>';
-      g.fields.forEach(function (f) {
-        var chip = document.createElement('button');
-        chip.className = 'te2-fieldchip';
-        chip.setAttribute('draggable', 'true');
-        chip.innerHTML = '<i class="bi bi-bezier2"></i><span>' + f.label + '</span>';
-        chip.addEventListener('click', function () {
-          var block = App.doc.make('field', { binding: f.binding, label: '', layout: 'stacked' }, { fontSize: 14 });
-          var sel = selectedBlock();
-          if (sel) { var ff = App.doc.findBlock(model, sel.id); ff.arr.splice(ff.index + 1, 0, block); }
-          else model.blocks.push(block);
-          selectedId = block.id; renderCanvas(); renderInspector(); renderToolbar();
+    // Search filtering
+    var searchInput = rootEl.querySelector('#te-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', function () {
+        var q = searchInput.value.trim().toLowerCase();
+        wrap.querySelectorAll('.te2-accordion').forEach(function (acc) {
+          var anyVisible = false;
+          acc.querySelectorAll('.te2-compitem').forEach(function (item) {
+            var match = !q || item.dataset.label.indexOf(q) !== -1;
+            item.classList.toggle('hidden', !match);
+            if (match) anyVisible = true;
+          });
+          acc.classList.toggle('hidden', !anyVisible);
+          if (q && anyVisible) acc.classList.add('open');
         });
-        chip.addEventListener('dragstart', function (e) { dnd = { newField: f.binding }; e.dataTransfer.effectAllowed = 'copy'; e.dataTransfer.setData('text/plain', f.binding); });
-        chip.addEventListener('dragend', clearDnd);
-        grp.appendChild(chip);
       });
-      fieldsWrap.appendChild(grp);
-    });
+    }
   }
 
   /* ---------------- toolbar ---------------- */
@@ -692,6 +805,18 @@ App.pages.register('template-editor', (function () {
     canvas.addEventListener('dragover', onDragOver);
     canvas.addEventListener('drop', onDrop);
 
+    // Mouse-wheel zoom on canvas (Ctrl/Cmd + wheel).
+    canvas.addEventListener('wheel', function (e) {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        var delta = e.deltaY > 0 ? -0.1 : 0.1;
+        setCanvasZoom(delta);
+      }
+    }, { passive: false });
+
+    // Click-and-drag pan on canvas.
+    initCanvasPan(canvas);
+
     // Top actions.
     var backBtn = root.querySelector('[data-act="back"]');
     if (backBtn) backBtn.addEventListener('click', function () { App.router.navigate({ page: 'templates' }); });
@@ -710,6 +835,8 @@ App.pages.register('template-editor', (function () {
 
     resizeHandler = App.util.debounce(fitCanvas, 120);
     window.addEventListener('resize', resizeHandler);
+
+    initSplitters();
   }
 
   function save() {
@@ -724,8 +851,137 @@ App.pages.register('template-editor', (function () {
     if (keyHandler) document.removeEventListener('keydown', keyHandler);
     if (resizeHandler) window.removeEventListener('resize', resizeHandler);
     if (dropLine) { dropLine.remove(); dropLine = null; }
+    destroySplitters();
+    destroyCanvasPan();
     model = meta = sample = selectedId = null;
     rootEl = canvas = inspector = toolbar = paperFrame = null;
+  }
+
+  /* ---------------- splitters ---------------- */
+  var splitterState = null;
+  var splitterCleanups = [];
+
+  function initSplitters() {
+    var leftPanel = rootEl.querySelector('#te-left');
+    var rightPanel = rootEl.querySelector('#te-inspector');
+    var leftSplitter = rootEl.querySelector('#te-splitter-left');
+    var rightSplitter = rootEl.querySelector('#te-splitter-right');
+
+    function startResize(e, panel, minW, maxW, invert) {
+      e.preventDefault();
+      splitterState = { panel: panel, startX: e.clientX, startW: panel.offsetWidth, minW: minW, maxW: maxW, invert: invert };
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      if (e.target.classList) e.target.classList.add('dragging');
+    }
+
+    function onMove(e) {
+      if (!splitterState) return;
+      var delta = e.clientX - splitterState.startX;
+      if (splitterState.invert) delta = -delta;
+      var newW = splitterState.startW + delta;
+      newW = Math.max(splitterState.minW, Math.min(splitterState.maxW, newW));
+      splitterState.panel.style.width = newW + 'px';
+      splitterState.panel.style.flex = 'none';
+      fitCanvas();
+    }
+
+    function onUp(e) {
+      if (!splitterState) return;
+      if (e.target.classList) e.target.classList.remove('dragging');
+      splitterState = null;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+
+    if (leftSplitter) {
+      leftSplitter.addEventListener('mousedown', function (e) { startResize(e, leftPanel, 180, 420); });
+    }
+    if (rightSplitter) {
+      rightSplitter.addEventListener('mousedown', function (e) { startResize(e, rightPanel, 220, 480, true); });
+    }
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    splitterCleanups.push(function () {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    });
+  }
+
+  function destroySplitters() {
+    splitterCleanups.forEach(function (fn) { fn(); });
+    splitterCleanups = [];
+    splitterState = null;
+  }
+
+  /* ---------------- canvas pan ---------------- */
+  var panState = null;
+  var panCleanup = null;
+
+  function initCanvasPan(canvasEl) {
+    function setPanReady(ready) {
+      canvasEl.classList.toggle('pan-ready', ready);
+    }
+
+    function onMouseDown(e) {
+      // Only pan with Ctrl + left mouse.
+      if (e.button !== 0 || !e.ctrlKey) return;
+      panState = { startX: e.clientX, startY: e.clientY, scrollLeft: canvasEl.scrollLeft, scrollTop: canvasEl.scrollTop };
+      canvasEl.classList.add('panning');
+      e.preventDefault();
+    }
+
+    function onMouseMove(e) {
+      if (!panState) return;
+      if ((e.buttons & 1) === 0 || !e.ctrlKey) { onMouseUp(); return; }
+      var dx = e.clientX - panState.startX;
+      var dy = e.clientY - panState.startY;
+      canvasEl.scrollLeft = panState.scrollLeft - dx;
+      canvasEl.scrollTop = panState.scrollTop - dy;
+    }
+
+    function onMouseUp() {
+      panState = null;
+      canvasEl.classList.remove('panning');
+    }
+
+    function onKeyDown(e) {
+      if (e.key === 'Control') setPanReady(true);
+    }
+
+    function onKeyUp(e) {
+      if (e.key === 'Control') {
+        setPanReady(false);
+        onMouseUp();
+      }
+    }
+
+    function onBlur() {
+      setPanReady(false);
+      onMouseUp();
+    }
+
+    canvasEl.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', onBlur);
+
+    panCleanup = function () {
+      canvasEl.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', onBlur);
+    };
+  }
+
+  function destroyCanvasPan() {
+    if (panCleanup) { panCleanup(); panCleanup = null; }
+    panState = null;
   }
 
   return { mount: mount, unmount: unmount };
