@@ -58,7 +58,12 @@ App.theme = (function () {
       App.router.navigate({ page: 'templates' });
     });
 
-    App.router.init();
+    // Ensure built-in templates are loaded before routing mounts pages
+    // (templates gallery + invoice creation expect templates to exist).
+    var p = (App.templates && typeof App.templates.ready === 'function') ? App.templates.ready() : Promise.resolve();
+    Promise.resolve(p).then(function () {
+      App.router.init();
+    });
   }
 
   if (document.readyState === 'loading') {

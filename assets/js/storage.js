@@ -39,6 +39,7 @@ App.store = (function () {
   function defaultSettings() {
     return {
       language: 'en',
+      betaMode: false,
       business: { name: '', address: '', email: '', phone: '', taxId: '', logo: '' },
       defaults: {
         currency: 'USD',
@@ -53,11 +54,13 @@ App.store = (function () {
 
   function getSettings() {
     var s = read(KEYS.settings, null);
-    if (!s) return defaultSettings();
     var d = defaultSettings();
+    if (!s) return d;
     return {
-      business: Object.assign(d.business, s.business || {}),
-      defaults: Object.assign(d.defaults, s.defaults || {})
+      language: s.language || d.language,
+      betaMode: typeof s.betaMode === 'boolean' ? s.betaMode : d.betaMode,
+      business: Object.assign({}, d.business, s.business || {}),
+      defaults: Object.assign({}, d.defaults, s.defaults || {})
     };
   }
 

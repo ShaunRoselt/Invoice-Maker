@@ -26,15 +26,17 @@ App.pages.register('settings', (function () {
     root.querySelectorAll('[data-path]').forEach(function (input) {
       var path = input.getAttribute('data-path');
       var val = getByPath(settings, path);
-      input.value = (val === undefined || val === null) ? '' : val;
+      if (input.type === 'checkbox') input.checked = !!val;
+      else input.value = (val === undefined || val === null) ? '' : val;
       var handler = function () {
-        var v = input.value;
+        var v = (input.type === 'checkbox') ? input.checked : input.value;
         if (input.type === 'number') v = v === '' ? '' : Number(v);
         setByPath(settings, path, v);
         if (path === 'defaults.numberPrefix') refreshNextNumber();
       };
       input.addEventListener('input', handler);
-      input.addEventListener('change', handler);
+      // Save on change so user choices are persisted immediately (checkboxes, selects)
+      input.addEventListener('change', function () { handler(); App.store.saveSettings(settings); });
     });
 
     refreshNextNumber();

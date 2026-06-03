@@ -1,0 +1,335 @@
+{
+  "id": "bold-sidebar",
+  "name": "Bold Sidebar",
+  "description": "A vivid brand sidebar holds your details while the body stays crisp and readable.",
+  "model": {
+    "page": {
+      "accent": "#0f766e",
+      "fontFamily": "\"Segoe UI\", Helvetica, Arial, sans-serif",
+      "color": "#1f2937",
+      "padding": 0,
+      "background": "#ffffff"
+    },
+    "blocks": [
+      {
+        "id": "blk_0061",
+        "type": "columns",
+        "props": {
+          "gap": 0,
+          "valign": "stretch"
+        },
+        "style": {
+          "marginBottom": 0
+        },
+        "columns": [
+          {
+            "style": {
+              "flex": "0 0 250px",
+              "bg": "#0f766e",
+              "color": "#ffffff",
+              "padding": 40,
+              "minHeight": 1123
+            },
+            "blocks": [
+              {
+                "id": "blk_0041",
+                "type": "image",
+                "props": {
+                  "bind": "seller.logo",
+                  "src": "",
+                  "width": 150,
+                  "invert": true
+                },
+                "style": {
+                  "align": "left",
+                  "marginBottom": 16
+                }
+              },
+              {
+                "id": "blk_0042",
+                "type": "field",
+                "props": {
+                  "binding": "seller.name",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 22,
+                  "bold": true,
+                  "marginBottom": 22
+                }
+              },
+              {
+                "id": "blk_0043",
+                "type": "text",
+                "props": {
+                  "text": "FROM"
+                },
+                "style": {
+                  "fontSize": 11,
+                  "bold": true,
+                  "letterSpacing": 0.12,
+                  "uppercase": true,
+                  "marginBottom": 6
+                }
+              },
+              {
+                "id": "blk_0044",
+                "type": "field",
+                "props": {
+                  "binding": "seller.address",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 13,
+                  "marginBottom": 18
+                }
+              },
+              {
+                "id": "blk_0045",
+                "type": "text",
+                "props": {
+                  "text": "CONTACT"
+                },
+                "style": {
+                  "fontSize": 11,
+                  "bold": true,
+                  "letterSpacing": 0.12,
+                  "uppercase": true,
+                  "marginBottom": 6
+                }
+              },
+              {
+                "id": "blk_0046",
+                "type": "field",
+                "props": {
+                  "binding": "seller.email",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 13
+                }
+              },
+              {
+                "id": "blk_0047",
+                "type": "field",
+                "props": {
+                  "binding": "seller.phone",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 13,
+                  "marginBottom": 18
+                }
+              },
+              {
+                "id": "blk_0048",
+                "type": "field",
+                "props": {
+                  "binding": "seller.taxId",
+                  "label": "Tax ID",
+                  "layout": "stacked"
+                },
+                "style": {
+                  "fontSize": 13
+                }
+              }
+            ]
+          },
+          {
+            "style": {
+              "flex": "1",
+              "padding": 44
+            },
+            "blocks": [
+              {
+                "id": "blk_0049",
+                "type": "heading",
+                "props": {
+                  "text": "INVOICE"
+                },
+                "style": {
+                  "fontSize": 36,
+                  "bold": true,
+                  "color": "#0f766e",
+                  "marginBottom": 4
+                }
+              },
+              {
+                "id": "blk_0050",
+                "type": "field",
+                "props": {
+                  "binding": "invoice.number",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 14,
+                  "color": "#6b7280",
+                  "marginBottom": 26
+                }
+              },
+              {
+                "id": "blk_0057",
+                "type": "columns",
+                "props": {
+                  "gap": 20
+                },
+                "style": {
+                  "marginBottom": 22
+                },
+                "columns": [
+                  {
+                    "style": {
+                      "flex": "1"
+                    },
+                    "blocks": [
+                      {
+                        "id": "blk_0051",
+                        "type": "text",
+                        "props": {
+                          "text": "BILL TO"
+                        },
+                        "style": {
+                          "fontSize": 11,
+                          "bold": true,
+                          "color": "#9ca3af",
+                          "letterSpacing": 0.1,
+                          "uppercase": true,
+                          "marginBottom": 6
+                        }
+                      },
+                      {
+                        "id": "blk_0052",
+                        "type": "field",
+                        "props": {
+                          "binding": "client.name",
+                          "label": ""
+                        },
+                        "style": {
+                          "fontSize": 15,
+                          "bold": true,
+                          "marginBottom": 2
+                        }
+                      },
+                      {
+                        "id": "blk_0053",
+                        "type": "field",
+                        "props": {
+                          "binding": "client.address",
+                          "label": ""
+                        },
+                        "style": {
+                          "fontSize": 13,
+                          "color": "#6b7280"
+                        }
+                      },
+                      {
+                        "id": "blk_0054",
+                        "type": "field",
+                        "props": {
+                          "binding": "client.email",
+                          "label": ""
+                        },
+                        "style": {
+                          "fontSize": 13,
+                          "color": "#6b7280"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "style": {
+                      "flex": "0 0 170px"
+                    },
+                    "blocks": [
+                      {
+                        "id": "blk_0055",
+                        "type": "field",
+                        "props": {
+                          "binding": "invoice.issueDate",
+                          "label": "Issued",
+                          "layout": "inline"
+                        },
+                        "style": {
+                          "fontSize": 13,
+                          "align": "right",
+                          "marginBottom": 5
+                        }
+                      },
+                      {
+                        "id": "blk_0056",
+                        "type": "field",
+                        "props": {
+                          "binding": "invoice.dueDate",
+                          "label": "Due",
+                          "layout": "inline"
+                        },
+                        "style": {
+                          "fontSize": 13,
+                          "align": "right"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "blk_0058",
+                "type": "items",
+                "props": {
+                  "columns": [
+                    {
+                      "key": "description",
+                      "label": "Description"
+                    },
+                    {
+                      "key": "qty",
+                      "label": "Qty"
+                    },
+                    {
+                      "key": "rate",
+                      "label": "Rate"
+                    },
+                    {
+                      "key": "amount",
+                      "label": "Amount"
+                    }
+                  ],
+                  "headerBg": "#f3f4f6",
+                  "headerColor": "#4b5563"
+                },
+                "style": {
+                  "marginBottom": 8
+                }
+              },
+              {
+                "id": "blk_0059",
+                "type": "totals",
+                "props": {
+                  "showTax": true,
+                  "width": 280
+                },
+                "style": {
+                  "align": "right",
+                  "marginTop": 8,
+                  "marginBottom": 20
+                }
+              },
+              {
+                "id": "blk_0060",
+                "type": "field",
+                "props": {
+                  "binding": "invoice.notes",
+                  "label": "Notes"
+                },
+                "style": {
+                  "fontSize": 13,
+                  "color": "#6b7280"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

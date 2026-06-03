@@ -78,6 +78,12 @@
       var def = this._def;
       var self = this;
 
+      var beta = false;
+      try {
+        var s = App.store && typeof App.store.getSettings === 'function' ? App.store.getSettings() : null;
+        beta = !!(s && s.betaMode);
+      } catch (e) { beta = false; }
+
       this.innerHTML = '\
         <div class="tc">\
           <div class="tc-preview a4-preview-stage">\
@@ -96,6 +102,11 @@
       this.querySelector('.name').textContent = def.name;
       this.querySelector('.tc-desc').textContent = def.description || '';
       this.querySelector('.tc-tag').textContent = def.builtIn ? 'Built-in' : 'Custom';
+
+      if (!beta) {
+        var editBtn = this.querySelector('[data-act="edit"]');
+        if (editBtn) editBtn.style.display = 'none';
+      }
 
       this._renderPreview();
 

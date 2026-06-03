@@ -14,6 +14,7 @@ App.pages.register('template-editor', (function () {
   var dnd = null;            // active drag descriptor
   var pending = null;        // pending drop target
   var resizeHandler, keyHandler;
+  var jsonOpen = false;
 
   var FONT_FAMILIES = [
     { value: '"Segoe UI", Helvetica, Arial, sans-serif', label: 'Sans (Segoe UI)' },
@@ -24,18 +25,49 @@ App.pages.register('template-editor', (function () {
   ];
   var FONT_SIZES = [10, 11, 12, 13, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48];
 
+  function newTemplateId() {
+    return App.util.uuid('tpl');
+  }
+
+  function currentTemplateDef() {
+    return {
+      id: meta && meta.id ? meta.id : null,
+      name: meta ? (meta.name || '') : '',
+      description: meta ? (meta.description || '') : '',
+      model: model || App.doc.defaultModel()
+    };
+  }
+
+  function templateJsonString() {
+    return JSON.stringify(currentTemplateDef(), null, 2);
+  }
+
+  function refreshJsonView() {
+    if (!rootEl) return;
+    var ta = rootEl.querySelector('#te-json');
+    if (!ta) return;
+    try {
+      ta.value = templateJsonString();
+    } catch (e) {
+      ta.value = 'Could not serialize template: ' + (e && e.message ? e.message : String(e));
+    }
+  }
+
   /* ---------------- init / model resolution ---------------- */
   function buildMeta(params) {
     var src;
     if (params.mode === 'create') {
-      return { meta: { id: null, name: '', isNew: true }, model: App.doc.defaultModel() };
+      return { meta: { id: newTemplateId(), name: '', description: '', isNew: true }, model: App.doc.defaultModel() };
     }
     src = App.templates.get(params.id);
-    if (!src) return { meta: { id: null, name: '', isNew: true }, model: App.doc.defaultModel() };
+    if (!src) return { meta: { id: newTemplateId(), name: '', description: '', isNew: true }, model: App.doc.defaultModel() };
     if (params.mode === 'duplicate' || src.builtIn) {
-      return { meta: { id: null, name: src.name + ' (copy)', isNew: true }, model: App.util.deepClone(src.model) };
+      return { meta: { id: newTemplateId(), name: src.name + ' (copy)', description: src.description || '', isNew: true }, model: App.util.deepClone(src.model) };
     }
-    return { meta: { id: src.id, name: src.name, isNew: false }, model: App.util.deepClone(src.model) };
+    // Prefer the raw stored description (if present) over the display fallback.
+    var raw = App.store.getUserTemplates().filter(function (t) { return t.id === src.id; })[0] || null;
+    var desc = (raw && raw.description) ? raw.description : (src.description || '');
+    return { meta: { id: src.id, name: src.name, description: desc, isNew: false }, model: App.util.deepClone(src.model) };
   }
 
   /* ---------------- canvas rendering ---------------- */
@@ -62,6 +94,7 @@ App.pages.register('template-editor', (function () {
         var prop = el.getAttribute('data-edit');
         f.block.props[prop] = (prop === 'label') ? el.textContent : el.innerHTML;
         togglePlaceholder(el);
+        refreshJsonView();
       });
       el.addEventListener('focus', function () {
         var blk = el.closest('.doc-blk'); if (blk) select(blk.getAttribute('data-id'));
@@ -177,16 +210,103 @@ App.pages.register('template-editor', (function () {
 
   function containerOwner(containerId) { return (!containerId || containerId === 'root') ? null : containerId.split(':')[0]; }
 
+  function px(v) {
+    var n = parseFloat(v);
+    return isFinite(n) ? n : 0;
+  }
+
+  function innerRect(el) {
+    var r = el.getBoundingClientRect();
+    var cs = window.getComputedStyle ? window.getComputedStyle(el) : null;
+    if (!cs) return r;
+    var pl = px(cs.paddingLeft), pr = px(cs.paddingRight);
+    var pt = px(cs.paddingTop), pb = px(cs.paddingBottom);
+    return {
+      left: r.left + pl,
+      right: r.right - pr,
+      top: r.top + pt,
+      bottom: r.bottom - pb
+    };
+  }
+
+  function closestContainer(el) {
+    if (!el || !el.closest) return null;
+    var c = el.closest('[data-container]');
+    if (!c) return null;
+    // Safety: only allow drops within the current paper.
+    if (paperFrame && !paperFrame.contains(c)) return null;
+    return c;
+  }
+
+  function directBlocks(containerEl) {
+    var out = [];
+    if (!containerEl || !containerEl.children) return out;
+    for (var i = 0; i < containerEl.children.length; i++) {
+      var ch = containerEl.children[i];
+      if (ch && ch.classList && ch.classList.contains('doc-blk')) out.push(ch);
+    }
+    return out;
+  }
+
+  function maybeAutoScroll(e) {
+    if (!canvas) return;
+    var r = canvas.getBoundingClientRect();
+    var pad = 42;
+    var speed = 22;
+    if (e.clientY < r.top + pad) canvas.scrollTop -= speed;
+    else if (e.clientY > r.bottom - pad) canvas.scrollTop += speed;
+  }
+
   function onDragOver(e) {
     if (!dnd) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = dnd.moveId ? 'move' : 'copy';
 
+    maybeAutoScroll(e);
+
+    // Drag events sometimes report an unhelpful `target` (e.g. the canvas)
+    // especially when zoomed/scaled; resolve the element actually under the
+    // cursor for more reliable hit-testing.
+    var hit = e.target;
+    if (document.elementFromPoint && typeof e.clientX === 'number' && typeof e.clientY === 'number') {
+      var elp = document.elementFromPoint(e.clientX, e.clientY);
+      if (elp) hit = elp;
+    }
+
     // The deepest container under the pointer (root paper or a column).
-    var cont = e.target.closest && e.target.closest('.doc-container');
+    var cont = closestContainer(hit);
     if (!cont) { pending = null; if (dropLine) dropLine.style.display = 'none'; return; }
 
-    var kids = [].slice.call(cont.querySelectorAll(':scope > .doc-blk'));
+    // Special case: when hovering over the empty background of a Columns block,
+    // reserve a small edge zone to allow dropping BEFORE/AFTER the whole columns
+    // block (instead of always forcing a drop into a column).
+    var hoveredBlk = hit.closest ? hit.closest('.doc-blk') : null;
+    if (hoveredBlk && hoveredBlk.getAttribute && hoveredBlk.getAttribute('data-type') === 'columns') {
+      var contId0 = cont.getAttribute('data-container');
+      if (contId0 && contId0.indexOf(hoveredBlk.getAttribute('data-id') + ':') === 0) {
+        var br = hoveredBlk.getBoundingClientRect();
+        var EDGE = 12;
+        var parentCont = closestContainer(hoveredBlk.parentElement);
+        if (parentCont && e.clientY <= br.top + EDGE) {
+          var irTop = innerRect(parentCont);
+          pending = { kind: 'ref', containerId: parentCont.getAttribute('data-container'), refId: hoveredBlk.getAttribute('data-id'), after: false };
+          showLine(irTop.left, irTop.right, br.top);
+          return;
+        }
+        if (parentCont && e.clientY >= br.bottom - EDGE) {
+          var irBot = innerRect(parentCont);
+          pending = { kind: 'ref', containerId: parentCont.getAttribute('data-container'), refId: hoveredBlk.getAttribute('data-id'), after: true };
+          showLine(irBot.left, irBot.right, br.bottom);
+          return;
+        }
+      }
+    }
+
+    var kids = directBlocks(cont);
+    // When reordering, ignore the block being dragged so we get a stable
+    // insertion point (and avoid confusing no-op drops).
+    if (dnd.moveId) kids = kids.filter(function (k) { return k.getAttribute('data-id') !== dnd.moveId; });
+
     var refBlk = null, after = false;
     for (var i = 0; i < kids.length; i++) {
       var r = kids[i].getBoundingClientRect();
@@ -194,14 +314,14 @@ App.pages.register('template-editor', (function () {
       refBlk = kids[i]; after = true;
     }
 
+    var ir = innerRect(cont);
     if (refBlk) {
       var rr = refBlk.getBoundingClientRect();
       pending = { kind: 'ref', containerId: cont.getAttribute('data-container'), refId: refBlk.getAttribute('data-id'), after: after };
-      showLine(rr.left, rr.right, after ? rr.bottom : rr.top);
+      showLine(ir.left, ir.right, after ? rr.bottom : rr.top);
     } else {
-      var cr = cont.getBoundingClientRect();
       pending = { kind: 'append', containerId: cont.getAttribute('data-container') };
-      showLine(cr.left + 6, cr.right - 6, cr.top + 6);
+      showLine(ir.left, ir.right, ir.top);
     }
   }
 
@@ -457,6 +577,7 @@ App.pages.register('template-editor', (function () {
     var f = App.doc.findBlock(model, blk.getAttribute('data-id')); if (!f) return;
     var prop = el.getAttribute('data-edit');
     f.block.props[prop] = (prop === 'label') ? el.textContent : el.innerHTML;
+    refreshJsonView();
   }
 
   function tbBtn(icon, onClick) {
@@ -478,11 +599,37 @@ App.pages.register('template-editor', (function () {
   /* ---------------- inspector ---------------- */
   function renderInspector() {
     inspector.innerHTML = '';
-    if (!selectedId || selectedId === '__page__') return renderPageInspector();
-    if (selectedId.indexOf(':') >= 0) return renderColumnInspector(selectedId);
-    var block = selectedBlock();
-    if (!block) return renderPageInspector();
-    renderBlockInspector(block);
+    if (!selectedId || selectedId === '__page__') {
+      renderPageInspector();
+    } else if (selectedId.indexOf(':') >= 0) {
+      renderColumnInspector(selectedId);
+    } else {
+      var block = selectedBlock();
+      if (!block) renderPageInspector();
+      else renderBlockInspector(block);
+    }
+
+    // Always available: raw JSON for the current template being edited.
+    inspector.appendChild(renderJsonInspector());
+    refreshJsonView();
+  }
+
+  function renderJsonInspector() {
+    var d = document.createElement('details');
+    d.className = 'insp-json';
+    d.id = 'te-json-wrap';
+    d.open = !!jsonOpen;
+    var s = document.createElement('summary');
+    s.textContent = 'Template JSON';
+    d.appendChild(s);
+    var ta = document.createElement('textarea');
+    ta.id = 'te-json';
+    ta.className = 'insp-control insp-json-ta';
+    ta.readOnly = true;
+    ta.spellcheck = false;
+    d.appendChild(ta);
+    d.addEventListener('toggle', function () { jsonOpen = d.open; });
+    return d;
   }
 
   function renderPageInspector() {
@@ -750,7 +897,7 @@ App.pages.register('template-editor', (function () {
 
   /* ---------------- helpers ---------------- */
   function sStyle(block, key, value) { block.style = block.style || {}; block.style[key] = value; recanvas(); }
-  function recanvas() { renderCanvas(); }
+  function recanvas() { renderCanvas(); refreshJsonView(); }
   function blockTypeName(t) {
     return { heading: 'Heading', text: 'Text', field: 'Field', image: 'Image', divider: 'Divider', spacer: 'Spacer', items: 'Line items', totals: 'Totals', columns: 'Columns' }[t] || t;
   }
@@ -766,6 +913,18 @@ App.pages.register('template-editor', (function () {
 
   /* ---------------- mount ---------------- */
   function mount(root, params) {
+    try {
+      var s = App.store && typeof App.store.getSettings === 'function' ? App.store.getSettings() : null;
+      if (!s || !s.betaMode) {
+        App.toast('Template creation/editing is in Beta mode. Enable it in Settings to use the template editor.', 'info');
+        App.router.navigate({ page: 'templates' }, { replace: true });
+        return;
+      }
+    } catch (e) {
+      App.router.navigate({ page: 'templates' }, { replace: true });
+      return;
+    }
+
     rootEl = root;
     var built = buildMeta(params);
     model = built.model; meta = built.meta;
@@ -779,7 +938,7 @@ App.pages.register('template-editor', (function () {
 
     var nameInput = root.querySelector('#te-name');
     nameInput.value = meta.name;
-    nameInput.addEventListener('input', function () { meta.name = nameInput.value; });
+    nameInput.addEventListener('input', function () { meta.name = nameInput.value; refreshJsonView(); });
     root.querySelector('#te-sub').textContent = meta.isNew ? 'New template' : 'Editing';
 
     buildPalette();
@@ -821,6 +980,17 @@ App.pages.register('template-editor', (function () {
     var backBtn = root.querySelector('[data-act="back"]');
     if (backBtn) backBtn.addEventListener('click', function () { App.router.navigate({ page: 'templates' }); });
     root.querySelector('[data-act="reset"]').addEventListener('click', selectPage);
+    var jsonBtn = root.querySelector('[data-act="json"]');
+    if (jsonBtn) {
+      jsonBtn.addEventListener('click', function () {
+        jsonOpen = !jsonOpen;
+        renderInspector();
+        if (jsonOpen) {
+          var wrap = root.querySelector('#te-json-wrap');
+          if (wrap && wrap.scrollIntoView) wrap.scrollIntoView();
+        }
+      });
+    }
     root.querySelector('[data-act="save"]').addEventListener('click', save);
 
     // Delete key removes selected block (when not editing text).

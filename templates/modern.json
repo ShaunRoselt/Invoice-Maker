@@ -1,0 +1,315 @@
+{
+  "id": "modern",
+  "name": "Modern Minimal",
+  "description": "Bold sans-serif type, airy spacing and a highlighted total — clean and current.",
+  "model": {
+    "page": {
+      "accent": "#4f46e5",
+      "fontFamily": "\"Segoe UI\", Helvetica, Arial, sans-serif",
+      "color": "#111827",
+      "padding": 60,
+      "background": "#ffffff"
+    },
+    "blocks": [
+      {
+        "id": "blk_0028",
+        "type": "columns",
+        "props": {
+          "gap": 24,
+          "valign": "flex-start"
+        },
+        "style": {
+          "marginBottom": 36
+        },
+        "columns": [
+          {
+            "style": {
+              "flex": "1"
+            },
+            "blocks": [
+              {
+                "id": "blk_0021",
+                "type": "image",
+                "props": {
+                  "bind": "seller.logo",
+                  "src": "",
+                  "width": 150
+                },
+                "style": {
+                  "align": "left",
+                  "marginBottom": 8
+                }
+              },
+              {
+                "id": "blk_0022",
+                "type": "field",
+                "props": {
+                  "binding": "seller.name",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 20,
+                  "bold": true,
+                  "marginBottom": 6
+                }
+              },
+              {
+                "id": "blk_0023",
+                "type": "field",
+                "props": {
+                  "binding": "seller.address",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 13,
+                  "color": "#6b7280"
+                }
+              },
+              {
+                "id": "blk_0024",
+                "type": "field",
+                "props": {
+                  "binding": "seller.email",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 13,
+                  "color": "#6b7280"
+                }
+              },
+              {
+                "id": "blk_0025",
+                "type": "field",
+                "props": {
+                  "binding": "seller.phone",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 13,
+                  "color": "#6b7280"
+                }
+              }
+            ]
+          },
+          {
+            "style": {
+              "flex": "0 0 220px"
+            },
+            "blocks": [
+              {
+                "id": "blk_0026",
+                "type": "heading",
+                "props": {
+                  "text": "Invoice"
+                },
+                "style": {
+                  "fontSize": 30,
+                  "bold": true,
+                  "align": "right",
+                  "marginBottom": 6
+                }
+              },
+              {
+                "id": "blk_0027",
+                "type": "field",
+                "props": {
+                  "binding": "invoice.number",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 14,
+                  "color": "#4f46e5",
+                  "bold": true,
+                  "align": "right"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "blk_0036",
+        "type": "columns",
+        "props": {
+          "gap": 40
+        },
+        "style": {
+          "marginBottom": 28
+        },
+        "columns": [
+          {
+            "style": {
+              "flex": "1"
+            },
+            "blocks": [
+              {
+                "id": "blk_0029",
+                "type": "text",
+                "props": {
+                  "text": "BILLED TO"
+                },
+                "style": {
+                  "fontSize": 11,
+                  "bold": true,
+                  "color": "#9ca3af",
+                  "letterSpacing": 0.1,
+                  "uppercase": true,
+                  "marginBottom": 8
+                }
+              },
+              {
+                "id": "blk_0030",
+                "type": "field",
+                "props": {
+                  "binding": "client.name",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 15,
+                  "bold": true,
+                  "marginBottom": 2
+                }
+              },
+              {
+                "id": "blk_0031",
+                "type": "field",
+                "props": {
+                  "binding": "client.address",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 13,
+                  "color": "#6b7280"
+                }
+              },
+              {
+                "id": "blk_0032",
+                "type": "field",
+                "props": {
+                  "binding": "client.email",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 13,
+                  "color": "#6b7280"
+                }
+              }
+            ]
+          },
+          {
+            "style": {
+              "flex": "1"
+            },
+            "blocks": [
+              {
+                "id": "blk_0033",
+                "type": "field",
+                "props": {
+                  "binding": "invoice.issueDate",
+                  "label": "Issue date",
+                  "layout": "inline"
+                },
+                "style": {
+                  "fontSize": 13,
+                  "marginBottom": 6
+                }
+              },
+              {
+                "id": "blk_0034",
+                "type": "field",
+                "props": {
+                  "binding": "invoice.dueDate",
+                  "label": "Due date",
+                  "layout": "inline"
+                },
+                "style": {
+                  "fontSize": 13,
+                  "marginBottom": 6
+                }
+              },
+              {
+                "id": "blk_0035",
+                "type": "field",
+                "props": {
+                  "binding": "invoice.poNumber",
+                  "label": "PO number",
+                  "layout": "inline"
+                },
+                "style": {
+                  "fontSize": 13
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "blk_0037",
+        "type": "items",
+        "props": {
+          "columns": [
+            {
+              "key": "description",
+              "label": "Description"
+            },
+            {
+              "key": "qty",
+              "label": "Qty"
+            },
+            {
+              "key": "rate",
+              "label": "Rate"
+            },
+            {
+              "key": "amount",
+              "label": "Amount"
+            }
+          ],
+          "headerBg": "#111827",
+          "headerColor": "#ffffff"
+        },
+        "style": {
+          "marginBottom": 8
+        }
+      },
+      {
+        "id": "blk_0038",
+        "type": "totals",
+        "props": {
+          "showTax": true,
+          "width": 300
+        },
+        "style": {
+          "align": "right",
+          "marginTop": 8,
+          "marginBottom": 28
+        }
+      },
+      {
+        "id": "blk_0039",
+        "type": "field",
+        "props": {
+          "binding": "invoice.notes",
+          "label": "Notes"
+        },
+        "style": {
+          "fontSize": 13,
+          "color": "#6b7280",
+          "marginBottom": 10
+        }
+      },
+      {
+        "id": "blk_0040",
+        "type": "field",
+        "props": {
+          "binding": "invoice.paymentInstructions",
+          "label": "Payment instructions"
+        },
+        "style": {
+          "fontSize": 13,
+          "color": "#6b7280"
+        }
+      }
+    ]
+  }
+}

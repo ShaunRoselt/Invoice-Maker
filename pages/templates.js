@@ -5,6 +5,15 @@ App.pages.register('templates', (function () {
   var filter = 'all';
   var query = '';
 
+  function betaEnabled() {
+    try {
+      var s = App.store && typeof App.store.getSettings === 'function' ? App.store.getSettings() : null;
+      return !!(s && s.betaMode);
+    } catch (e) {
+      return false;
+    }
+  }
+
   function matchesSearch(t) {
     if (!query) return true;
     var q = query.toLowerCase();
@@ -47,6 +56,19 @@ App.pages.register('templates', (function () {
   }
 
   function mount(root) {
+    var beta = betaEnabled();
+
+    // Non-beta: built-ins only (no create/edit).
+    if (!beta) {
+      filter = 'builtin';
+      var sub = root.querySelector('.subtitle');
+      if (sub) sub.textContent = 'Full A4 previews, scaled to each card. Use a built-in template to start an invoice.';
+      var filterEl = root.querySelector('#tpl-filter');
+      if (filterEl) filterEl.style.display = 'none';
+      var createBtn = root.querySelector('[data-act="create"]');
+      if (createBtn) createBtn.style.display = 'none';
+    }
+
     renderGrid(root);
 
     var search = root.querySelector('#tpl-search');
@@ -55,17 +77,19 @@ App.pages.register('templates', (function () {
       renderGrid(root);
     }, 200));
 
-    root.querySelector('#tpl-filter').addEventListener('click', function (e) {
-      var btn = e.target.closest('.seg-btn');
-      if (!btn) return;
-      filter = btn.getAttribute('data-filter');
-      root.querySelectorAll('.seg-btn').forEach(function (b) { b.classList.toggle('active', b === btn); });
-      renderGrid(root);
-    });
+    if (beta) {
+      root.querySelector('#tpl-filter').addEventListener('click', function (e) {
+        var btn = e.target.closest('.seg-btn');
+        if (!btn) return;
+        filter = btn.getAttribute('data-filter');
+        root.querySelectorAll('.seg-btn').forEach(function (b) { b.classList.toggle('active', b === btn); });
+        renderGrid(root);
+      });
 
-    root.querySelector('[data-act="create"]').addEventListener('click', function () {
-      App.router.navigate({ page: 'template-editor', mode: 'create' });
-    });
+      root.querySelector('[data-act="create"]').addEventListener('click', function () {
+        App.router.navigate({ page: 'template-editor', mode: 'create' });
+      });
+    }
 
     // Card events (bubble up to the page root).
     root.addEventListener('tpl-use', function (e) {
@@ -79,6 +103,10 @@ App.pages.register('templates', (function () {
       App.router.navigate({ page: 'invoice-editor', id: newInv.id });
     });
     root.addEventListener('tpl-edit', function (e) {
+      if (!betaEnabled()) {
+        App.toast('Template editing is available in Beta mode. Enable it in Settings to create or edit templates.', 'info');
+        return;
+      }
       App.router.navigate({ page: 'template-editor', id: e.detail.id });
     });
   }

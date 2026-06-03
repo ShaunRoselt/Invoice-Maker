@@ -1,15 +1,27 @@
 /* ============================================================
-   templates.js — registry of invoice templates.
+  templates.js — registry + loader for invoice templates.
 
-   A template is { id, name, description, model } where `model`
-   is a block document (see doc.js). Built-in templates register
-   here; custom templates live in localStorage and store their own
-   model JSON.
-   ============================================================ */
+  A template is { id, name, description, model } where `model`
+  is a block document (see doc.js).
+
+  Built-in templates are loaded from JSON files in /templates
+  using templates/manifest.json.
+  Custom templates live in localStorage and store their own model.
+  ============================================================ */
 window.App = window.App || {};
 
 App.templates = (function () {
   var builtIn = {};   // id -> { id, name, description, model, builtIn:true }
+  var builtInsReady = null;
+
+  function betaEnabled() {
+    try {
+      var s = (App.store && typeof App.store.getSettings === 'function') ? App.store.getSettings() : null;
+      return !!(s && s.betaMode);
+    } catch (e) {
+      return false;
+    }
+  }
 
   function register(def) {
     if (!def || !def.id) { console.warn('Template missing id', def); return; }
@@ -17,18 +29,81 @@ App.templates = (function () {
     builtIn[def.id] = def;
   }
 
+  function normalizeModel(model) {
+    model = model || App.doc.defaultModel();
+    model.page = model.page || {};
+    model.blocks = Array.isArray(model.blocks) ? model.blocks : [];
+
+    function walk(blocks) {
+      (blocks || []).forEach(function (b) {
+        if (!b) return;
+        if (!b.id) b.id = (App.doc && typeof App.doc.newId === 'function') ? App.doc.newId() : App.util.uuid('blk');
+        b.props = b.props || {};
+        b.style = b.style || {};
+        if (b.type === 'columns') {
+          b.columns = Array.isArray(b.columns) ? b.columns : [];
+          b.columns.forEach(function (c) {
+            if (!c) return;
+            c.style = c.style || {};
+            c.blocks = Array.isArray(c.blocks) ? c.blocks : [];
+            walk(c.blocks);
+          });
+        }
+      });
+    }
+
+    walk(model.blocks);
+    return model;
+  }
+
+  function loadBuiltIns() {
+    if (builtInsReady) return builtInsReady;
+    builtInsReady = fetch('templates/manifest.json', { cache: 'no-cache' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('Missing templates/manifest.json');
+        return res.json();
+      })
+      .then(function (manifest) {
+        var list = (manifest && manifest.builtins) ? manifest.builtins : [];
+        if (!Array.isArray(list) || !list.length) return null;
+
+        // Load each JSON template and register it.
+        return Promise.all(list.map(function (name) {
+          var url = (String(name).indexOf('/') >= 0) ? String(name) : ('templates/' + String(name));
+          return fetch(url, { cache: 'no-cache' })
+            .then(function (r) { if (!r.ok) throw new Error('Failed to fetch ' + url); return r.json(); })
+            .then(function (def) {
+              if (!def || !def.id) return;
+              if (def.model) def.model = normalizeModel(def.model);
+              register(def);
+            })
+            .catch(function (e) {
+              console.error('Template load failed for ' + url, e);
+            });
+        }));
+      })
+      .catch(function (e) {
+        console.error('Built-in templates failed to load', e);
+        return null;
+      });
+    return builtInsReady;
+  }
+
   function getAll() {
     var list = [];
     Object.keys(builtIn).forEach(function (id) { list.push(builtIn[id]); });
-    App.store.getUserTemplates().forEach(function (u) {
-      list.push({ id: u.id, name: u.name, description: u.description || 'Custom template', model: u.model, builtIn: false });
-    });
+    if (betaEnabled()) {
+      App.store.getUserTemplates().forEach(function (u) {
+        list.push({ id: u.id, name: u.name, description: u.description || 'Custom template', model: u.model, builtIn: false });
+      });
+    }
     return list;
   }
 
   function get(id) {
     if (!id) return null;
     if (builtIn[id]) return builtIn[id];
+    if (!betaEnabled()) return null;
     var u = App.store.getUserTemplates().filter(function (t) { return t.id === id; })[0];
     return u ? { id: u.id, name: u.name, description: u.description || 'Custom template', model: u.model, builtIn: false } : null;
   }
@@ -73,6 +148,7 @@ App.templates = (function () {
 
   return {
     register: register,
+    ready: loadBuiltIns,
     getAll: getAll,
     get: get,
     modelFor: modelFor,
@@ -82,3 +158,6 @@ App.templates = (function () {
     previewInvoice: previewInvoice
   };
 })();
+
+// Start loading built-ins ASAP.
+if (App.templates && typeof App.templates.ready === 'function') App.templates.ready();

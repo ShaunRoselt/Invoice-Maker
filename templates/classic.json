@@ -1,0 +1,318 @@
+{
+  "id": "classic",
+  "name": "Classic Corporate",
+  "description": "Traditional serif layout with a navy header rule — timeless and formal.",
+  "model": {
+    "page": {
+      "accent": "#1e3a5f",
+      "fontFamily": "Georgia, \"Times New Roman\", serif",
+      "color": "#1f2933",
+      "padding": 56,
+      "background": "#ffffff"
+    },
+    "blocks": [
+      {
+        "id": "blk_0008",
+        "type": "columns",
+        "props": {
+          "gap": 24,
+          "valign": "flex-start"
+        },
+        "style": {
+          "marginBottom": 18
+        },
+        "columns": [
+          {
+            "style": {
+              "flex": "1"
+            },
+            "blocks": [
+              {
+                "id": "blk_0001",
+                "type": "image",
+                "props": {
+                  "bind": "seller.logo",
+                  "src": "",
+                  "width": 200
+                },
+                "style": {
+                  "align": "left",
+                  "marginBottom": 8
+                }
+              },
+              {
+                "id": "blk_0002",
+                "type": "field",
+                "props": {
+                  "binding": "seller.name",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 22,
+                  "bold": true,
+                  "color": "#1e3a5f",
+                  "marginBottom": 6
+                }
+              },
+              {
+                "id": "blk_0003",
+                "type": "field",
+                "props": {
+                  "binding": "seller.address",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 13,
+                  "color": "#52606d"
+                }
+              },
+              {
+                "id": "blk_0004",
+                "type": "field",
+                "props": {
+                  "binding": "seller.email",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 13,
+                  "color": "#52606d"
+                }
+              },
+              {
+                "id": "blk_0005",
+                "type": "field",
+                "props": {
+                  "binding": "seller.phone",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 13,
+                  "color": "#52606d"
+                }
+              }
+            ]
+          },
+          {
+            "style": {
+              "flex": "0 0 230px"
+            },
+            "blocks": [
+              {
+                "id": "blk_0006",
+                "type": "heading",
+                "props": {
+                  "text": "INVOICE"
+                },
+                "style": {
+                  "fontSize": 38,
+                  "bold": true,
+                  "color": "#1e3a5f",
+                  "align": "right",
+                  "letterSpacing": 0.06,
+                  "marginBottom": 4
+                }
+              },
+              {
+                "id": "blk_0007",
+                "type": "field",
+                "props": {
+                  "binding": "invoice.number",
+                  "label": "",
+                  "layout": "stacked"
+                },
+                "style": {
+                  "fontSize": 14,
+                  "color": "#52606d",
+                  "align": "right"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "blk_0009",
+        "type": "divider",
+        "props": {
+          "color": "#1e3a5f",
+          "thickness": 3
+        },
+        "style": {
+          "marginTop": 4,
+          "marginBottom": 22
+        }
+      },
+      {
+        "id": "blk_0016",
+        "type": "columns",
+        "props": {
+          "gap": 24
+        },
+        "style": {
+          "marginBottom": 18
+        },
+        "columns": [
+          {
+            "style": {
+              "flex": "1"
+            },
+            "blocks": [
+              {
+                "id": "blk_0010",
+                "type": "text",
+                "props": {
+                  "text": "BILL TO"
+                },
+                "style": {
+                  "fontSize": 12,
+                  "bold": true,
+                  "color": "#1e3a5f",
+                  "letterSpacing": 0.08,
+                  "marginBottom": 6
+                }
+              },
+              {
+                "id": "blk_0011",
+                "type": "field",
+                "props": {
+                  "binding": "client.name",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 16,
+                  "bold": true,
+                  "marginBottom": 2
+                }
+              },
+              {
+                "id": "blk_0012",
+                "type": "field",
+                "props": {
+                  "binding": "client.address",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 13,
+                  "color": "#52606d"
+                }
+              },
+              {
+                "id": "blk_0013",
+                "type": "field",
+                "props": {
+                  "binding": "client.email",
+                  "label": ""
+                },
+                "style": {
+                  "fontSize": 13,
+                  "color": "#52606d"
+                }
+              }
+            ]
+          },
+          {
+            "style": {
+              "flex": "0 0 230px"
+            },
+            "blocks": [
+              {
+                "id": "blk_0014",
+                "type": "field",
+                "props": {
+                  "binding": "invoice.issueDate",
+                  "label": "Issue Date",
+                  "layout": "inline"
+                },
+                "style": {
+                  "fontSize": 13,
+                  "align": "right",
+                  "marginBottom": 4
+                }
+              },
+              {
+                "id": "blk_0015",
+                "type": "field",
+                "props": {
+                  "binding": "invoice.dueDate",
+                  "label": "Due Date",
+                  "layout": "inline"
+                },
+                "style": {
+                  "fontSize": 13,
+                  "align": "right"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "blk_0017",
+        "type": "items",
+        "props": {
+          "columns": [
+            {
+              "key": "description",
+              "label": "Description"
+            },
+            {
+              "key": "qty",
+              "label": "Qty"
+            },
+            {
+              "key": "rate",
+              "label": "Rate"
+            },
+            {
+              "key": "amount",
+              "label": "Amount"
+            }
+          ],
+          "headerBg": "#1e3a5f",
+          "headerColor": "#ffffff"
+        },
+        "style": {
+          "marginBottom": 8
+        }
+      },
+      {
+        "id": "blk_0018",
+        "type": "totals",
+        "props": {
+          "showTax": true,
+          "width": 290
+        },
+        "style": {
+          "align": "right",
+          "marginTop": 6,
+          "marginBottom": 20
+        }
+      },
+      {
+        "id": "blk_0019",
+        "type": "field",
+        "props": {
+          "binding": "invoice.notes",
+          "label": "Notes"
+        },
+        "style": {
+          "fontSize": 13,
+          "color": "#52606d",
+          "marginBottom": 10
+        }
+      },
+      {
+        "id": "blk_0020",
+        "type": "field",
+        "props": {
+          "binding": "invoice.paymentInstructions",
+          "label": "Payment"
+        },
+        "style": {
+          "fontSize": 13,
+          "color": "#52606d"
+        }
+      }
+    ]
+  }
+}

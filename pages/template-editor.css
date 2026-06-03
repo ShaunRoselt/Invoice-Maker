@@ -620,6 +620,35 @@ input.insp-color {
   color: var(--text);
 }
 
+/* Template JSON viewer */
+.insp-json {
+  border-top: 1px solid var(--border);
+  padding: 14px 0;
+}
+
+.insp-json summary {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text-faint);
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.insp-json summary::-webkit-details-marker {
+  display: none;
+}
+
+.insp-json-ta {
+  margin-top: 10px;
+  min-height: 220px;
+  resize: vertical;
+  font-size: .8rem;
+  line-height: 1.35;
+}
+
 .insp-colbtns button.active {
   border-color: var(--brand);
   color: var(--brand);
