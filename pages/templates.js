@@ -5,6 +5,8 @@ App.pages.register('templates', (function () {
   var filter = 'all';
   var query = '';
 
+  function t(key, vars) { return App.i18n.t(key, vars); }
+
   function betaEnabled() {
     try {
       var s = App.store && typeof App.store.getSettings === 'function' ? App.store.getSettings() : null;
@@ -38,13 +40,13 @@ App.pages.register('templates', (function () {
     if (!all.length) {
       if (query) {
         grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="bi bi-search"></i>\
-          <h3>No matches</h3><p>Try a different search term or clear the filter.</p></div>';
+          <h3>' + App.util.escapeHtml(t('common.noMatches')) + '</h3><p>' + App.util.escapeHtml(t('templates.noMatchesHint')) + '</p></div>';
       } else if (filter === 'custom') {
         grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="bi bi-collection"></i>\
-          <h3>No custom templates</h3><p>Create a template to see it listed here.</p></div>';
+          <h3>' + App.util.escapeHtml(t('templates.noCustom')) + '</h3><p>' + App.util.escapeHtml(t('templates.noCustomHint')) + '</p></div>';
       } else {
         grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="bi bi-collection"></i>\
-          <h3>No templates here</h3><p>Create a custom template to see it listed.</p></div>';
+          <h3>' + App.util.escapeHtml(t('templates.noTemplates')) + '</h3><p>' + App.util.escapeHtml(t('templates.noTemplatesHint')) + '</p></div>';
       }
       return;
     }
@@ -62,7 +64,7 @@ App.pages.register('templates', (function () {
     if (!beta) {
       filter = 'builtin';
       var sub = root.querySelector('.subtitle');
-      if (sub) sub.textContent = 'Full A4 previews, scaled to each card. Use a built-in template to start an invoice.';
+      if (sub) sub.textContent = t('templates.subtitleBetaOff');
       var filterEl = root.querySelector('#tpl-filter');
       if (filterEl) filterEl.style.display = 'none';
       var createBtn = root.querySelector('[data-act="create"]');
@@ -104,7 +106,7 @@ App.pages.register('templates', (function () {
     });
     root.addEventListener('tpl-edit', function (e) {
       if (!betaEnabled()) {
-        App.toast('Template editing is available in Beta mode. Enable it in Settings to create or edit templates.', 'info');
+        App.toast(t('templates.betaEditHint'), 'info');
         return;
       }
       App.router.navigate({ page: 'template-editor', id: e.detail.id });

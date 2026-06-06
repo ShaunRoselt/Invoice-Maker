@@ -1,19 +1,19 @@
 <div class="page-header">
   <div>
-    <h1>Invoices</h1>
-    <p class="subtitle">All invoices you've created. Hold Shift and click rows to select multiple.</p>
+    <h1 data-i18n="invoices.title">Invoices</h1>
+    <p class="subtitle" data-i18n="invoices.subtitle">All invoices you've created. Hold Shift and click rows to select multiple.</p>
   </div>
   <div class="page-actions">
-    <app-select id="inv-status-select" data-inline data-label="Status"></app-select>
+    <app-select id="inv-status-select" data-inline data-label="Status" data-i18n-label="common.status"></app-select>
     <select class="input select" id="inv-status">
-      <option value="">All</option>
-      <option value="draft">Draft</option>
-      <option value="sent">Sent</option>
-      <option value="paid">Paid</option>
-      <option value="overdue">Overdue</option>
-      <option value="outstanding">Outstanding</option>
+      <option value="" data-i18n="common.all">All</option>
+      <option value="draft" data-i18n="status.draft">Draft</option>
+      <option value="sent" data-i18n="status.sent">Sent</option>
+      <option value="paid" data-i18n="status.paid">Paid</option>
+      <option value="overdue" data-i18n="status.overdue">Overdue</option>
+      <option value="outstanding" data-i18n="status.outstanding">Outstanding</option>
     </select>
-    <input class="input" id="inv-search" placeholder="Search invoices…" style="width:240px;margin-left:8px">
+    <input class="input" id="inv-search" data-i18n-placeholder="invoices.searchPlaceholder" placeholder="Search invoices…" style="width:240px;margin-left:8px">
   </div>
 </div>
 

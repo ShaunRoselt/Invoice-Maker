@@ -97,26 +97,31 @@ App.router = (function () {
     });
   }
 
+  function t(key, vars) {
+    return (App.i18n && App.i18n.t) ? App.i18n.t(key, vars) : '';
+  }
+
   function showLoading() {
     outlet.innerHTML = '<div class="route-loading" style="padding:48px;text-align:center;color:var(--text-muted)">' +
-      '<i class="bi bi-arrow-repeat spin" style="font-size:1.6rem;display:block;margin-bottom:8px"></i>Loading\u2026</div>';
+      '<i class="bi bi-arrow-repeat spin" style="font-size:1.6rem;display:block;margin-bottom:8px"></i>' +
+      App.util.escapeHtml(t('common.loading')) + '</div>';
   }
 
   function pageLabel(name, params) {
     var labels = {
-      dashboard: 'Dashboard',
-      invoices: 'Invoices',
-      'invoice-editor': 'Invoice',
-      clients: 'Clients',
-      'client-editor': params && params.id ? 'Edit client' : 'New client',
-      businesses: 'Businesses',
-      'business-editor': params && params.id ? 'Edit business' : 'New business',
-      templates: 'Templates',
-      'template-editor': 'Template editor',
-      settings: 'Settings',
-      '404': 'Page not found'
+      dashboard: 'route.dashboard',
+      invoices: 'route.invoices',
+      'invoice-editor': 'route.invoice',
+      clients: 'route.clients',
+      'client-editor': params && params.id ? 'route.editClient' : 'route.newClient',
+      businesses: 'route.businesses',
+      'business-editor': params && params.id ? 'route.editBusiness' : 'route.newBusiness',
+      templates: 'route.templates',
+      'template-editor': 'route.templateEditor',
+      settings: 'route.settings',
+      '404': 'route.notFound'
     };
-    return labels[name] || name;
+    return t(labels[name] || name);
   }
 
   function parentFor(name) {
@@ -132,7 +137,7 @@ App.router = (function () {
     if (name === DEFAULT) return '';
     var parent = parentFor(name);
     var html = '<nav class="breadcrumbs" aria-label="Breadcrumb">' +
-      '<a href="' + buildUrl({ page: DEFAULT }) + '" data-bc-page="' + DEFAULT + '">Dashboard</a>';
+      '<a href="' + buildUrl({ page: DEFAULT }) + '" data-bc-page="' + DEFAULT + '">' + App.util.escapeHtml(t('route.dashboard')) + '</a>';
     if (parent) {
       html += '<i class="bi bi-chevron-right"></i><a href="' + buildUrl({ page: parent }) + '" data-bc-page="' + parent + '">' + App.util.escapeHtml(pageLabel(parent, params)) + '</a>';
     }
@@ -167,6 +172,7 @@ App.router = (function () {
       return Promise.all([ensureCss(resolved.name), ensureJs(resolved.name)]).then(function () {
         if (requestedPage() !== requested) return;
         outlet.innerHTML = breadcrumbHtml(resolved.name, getParams()) + resolved.html;
+        if (App.i18n && typeof App.i18n.apply === 'function') App.i18n.apply(outlet);
         outlet.querySelectorAll('[data-bc-page]').forEach(function (a) {
           a.addEventListener('click', function (e) {
             e.preventDefault();
@@ -184,25 +190,29 @@ App.router = (function () {
     }).catch(function (err) {
       console.error(err);
       outlet.innerHTML = '<div class="empty-state"><i class="bi bi-exclamation-triangle"></i>' +
-        '<h3>Could not load this page</h3><p class="text-muted">' + App.util.escapeHtml(err.message) + '</p>' +
-        '<p class="text-muted">If you opened the file directly, run a local server (see README).</p></div>';
+        '<h3>' + App.util.escapeHtml(t('route.couldNotLoad')) + '</h3><p class="text-muted">' + App.util.escapeHtml(err.message) + '</p>' +
+        '<p class="text-muted">' + App.util.escapeHtml(t('route.localServerHint')) + '</p></div>';
     });
   }
 
   function fallback404(requested) {
     return '<div class="empty-state"><i class="bi bi-compass"></i>' +
-      '<h3>Page not found</h3><p class="text-muted">No page named \u201c' + App.util.escapeHtml(requested) + '\u201d.</p>' +
-      '<a class="btn btn-primary" href="' + buildUrl({ page: 'dashboard' }) + '">Go to dashboard</a></div>';
+      '<h3>' + App.util.escapeHtml(t('route.notFound')) + '</h3><p class="text-muted">' +
+      App.util.escapeHtml(t('route.pageNotFoundNamed', { name: requested })) + '</p>' +
+      '<a class="btn btn-primary" href="' + buildUrl({ page: 'dashboard' }) + '">' +
+      App.util.escapeHtml(t('route.goToDashboard')) + '</a></div>';
   }
 
   function init() {
     outlet = document.getElementById('app');
     window.addEventListener('popstate', render);
+    App.bus.on('i18n:change', render);
     render();
   }
 
   return {
     init: init,
+    render: render,
     navigate: navigate,
     getParams: getParams,
     requestedPage: requestedPage,

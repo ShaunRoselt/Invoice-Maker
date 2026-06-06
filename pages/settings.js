@@ -26,6 +26,10 @@ App.pages.register('settings', (function () {
     root.querySelectorAll('[data-path]').forEach(function (input) {
       var path = input.getAttribute('data-path');
       var val = getByPath(settings, path);
+      if (path === 'language' && App.i18n && typeof App.i18n.locale === 'function') {
+        val = App.i18n.locale();
+        setByPath(settings, path, val);
+      }
       if (input.type === 'checkbox') input.checked = !!val;
       else input.value = (val === undefined || val === null) ? '' : val;
       var handler = function () {
@@ -33,15 +37,22 @@ App.pages.register('settings', (function () {
         if (input.type === 'number') v = v === '' ? '' : Number(v);
         setByPath(settings, path, v);
         if (path === 'defaults.numberPrefix') refreshNextNumber();
+        if (path === 'language' && App.i18n && typeof App.i18n.setLocale === 'function') {
+          App.i18n.setLocale(v).then(function () {
+            document.title = App.i18n.t('app.title');
+          });
+          return;
+        }
       };
       input.addEventListener('input', handler);
-      // Save on change so user choices are persisted immediately (checkboxes, selects)
-      input.addEventListener('change', function () { handler(); App.store.saveSettings(settings); });
+      input.addEventListener('change', function () {
+        handler();
+        if (path !== 'language') App.store.saveSettings(settings);
+      });
     });
 
     refreshNextNumber();
 
-    // Theme selector in Appearance card
     var themeSel = root.querySelector('#s-theme');
     if (themeSel) {
       themeSel.value = App.theme.get();
@@ -50,7 +61,7 @@ App.pages.register('settings', (function () {
 
     root.querySelector('[data-act="save"]').addEventListener('click', function () {
       App.store.saveSettings(settings);
-      App.toast('Settings saved', 'success');
+      App.toast(App.i18n.t('settings.saved'), 'success');
     });
   }
 

@@ -72,11 +72,18 @@ App.theme = (function () {
     Promise.all([tplReady, storeReady]).then(function () {
       // First visit: detect locale currency and persist default settings.
       if (App.store && typeof App.store.getSettings === 'function') App.store.getSettings();
+      return (App.i18n && typeof App.i18n.ready === 'function')
+        ? App.i18n.ready()
+        : Promise.resolve();
+    }).then(function () {
       App.theme.set(App.theme.get());
       App.router.init();
     }).catch(function (err) {
       console.error('App failed to initialize storage', err);
-      App.router.init();
+      var boot = (App.i18n && typeof App.i18n.ready === 'function')
+        ? App.i18n.ready()
+        : Promise.resolve();
+      boot.then(function () { App.router.init(); });
     });
   }
 

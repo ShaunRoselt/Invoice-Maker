@@ -10,6 +10,10 @@ App.listSelection = function (opts) {
   var singular = opts.singular || 'item';
   var plural = opts.plural || singular + 's';
 
+  function t(key, vars) {
+    return (App.i18n && App.i18n.t) ? App.i18n.t(key, vars) : key;
+  }
+
   function count() {
     return Object.keys(selected).length;
   }
@@ -106,8 +110,8 @@ App.listSelection = function (opts) {
       return '<th class="select-col select-col-head" aria-hidden="true"></th>';
     }
     return '<th class="select-col select-col-head">' +
-      '<label class="row-check visible" title="Select all on this page">' +
-      '<input type="checkbox" class="select-all-cb"' + (allSelected ? ' checked' : '') + ' aria-label="Select all">' +
+      '<label class="row-check visible" title="' + App.util.escapeHtml(t('common.selectAllOnPage')) + '">' +
+      '<input type="checkbox" class="select-all-cb"' + (allSelected ? ' checked' : '') + ' aria-label="' + App.util.escapeHtml(t('common.selectAll')) + '">' +
       '</label></th>';
   }
 
@@ -117,7 +121,7 @@ App.listSelection = function (opts) {
     return '<td class="select-col">' +
       '<label class="row-check' + (visible ? ' visible' : '') + '">' +
       '<input type="checkbox" class="row-select-cb" data-id="' + App.util.escapeHtml(id) + '"' +
-      (on ? ' checked' : '') + ' aria-label="Select row">' +
+      (on ? ' checked' : '') + ' aria-label="' + App.util.escapeHtml(t('common.selectRow')) + '">' +
       '</label></td>';
   }
 
@@ -130,12 +134,12 @@ App.listSelection = function (opts) {
       bar.innerHTML =
         '<div class="list-bulk-left">' +
           '<span class="list-bulk-count"></span>' +
-          '<span class="list-bulk-hint">Shift+click rows to select more</span>' +
+          '<span class="list-bulk-hint">' + App.util.escapeHtml(t('common.shiftClickHint')) + '</span>' +
         '</div>' +
         '<div class="list-bulk-actions">' +
-          '<button type="button" class="btn btn-ghost btn-sm" data-bulk-act="clear">Clear</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-bulk-act="clear">' + App.util.escapeHtml(t('common.clear')) + '</button>' +
           '<button type="button" class="btn btn-danger btn-sm" data-bulk-act="delete">' +
-            '<i class="bi bi-trash"></i> Delete selected</button>' +
+            '<i class="bi bi-trash"></i> ' + App.util.escapeHtml(t('common.deleteSelected')) + '</button>' +
         '</div>';
       cardEl.insertBefore(bar, cardEl.firstChild);
       bar.querySelector('[data-bulk-act="clear"]').addEventListener('click', function () { clear(); });
@@ -146,7 +150,9 @@ App.listSelection = function (opts) {
     var n = count();
     bar.hidden = n === 0;
     cardEl.classList.toggle('has-selection', n > 0);
-    bar.querySelector('.list-bulk-count').textContent = n === 1 ? ('1 ' + singular + ' selected') : (n + ' ' + plural + ' selected');
+    bar.querySelector('.list-bulk-count').textContent = n === 1
+      ? t('common.selectedOne', { item: singular })
+      : t('common.selectedMany', { count: n, items: plural });
   }
 
   function bindTable(tableEl, visibleIds, cardEl, onNavigate) {

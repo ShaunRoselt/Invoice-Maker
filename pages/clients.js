@@ -7,17 +7,19 @@ App.pages.register('clients', (function () {
   var sort = { key: 'name', dir: 'asc' };
   var selection = null;
 
+  function t(key, vars) { return App.i18n.t(key, vars); }
+
   function displayName(client) {
-    return client.name || client.contactName || 'Unnamed client';
+    return client.name || client.contactName || t('clients.unnamed');
   }
 
   function confirmDelete(client) {
     var dialogEl = document.querySelector('app-dialog');
     if (!dialogEl || typeof dialogEl.confirm !== 'function') return Promise.resolve(false);
-    return dialogEl.confirm('Delete client ' + displayName(client) + '?', {
-      title: 'Confirm deletion',
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
+    return dialogEl.confirm(t('clients.deleteConfirm', { name: displayName(client) }), {
+      title: t('common.confirmDeletion'),
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
       danger: true
     });
   }
@@ -72,9 +74,9 @@ App.pages.register('clients', (function () {
 
   function confirmBulkDelete(count) {
     var dialogEl = document.querySelector('app-dialog');
-    var msg = count === 1 ? 'Delete 1 client?' : 'Delete ' + count + ' clients?';
+    var msg = count === 1 ? t('clients.deleteOne') : t('clients.deleteMany', { count: count });
     if (dialogEl && typeof dialogEl.confirm === 'function') {
-      return dialogEl.confirm(msg, { title: 'Delete clients', confirmText: 'Delete', cancelText: 'Cancel', danger: true });
+      return dialogEl.confirm(msg, { title: t('clients.deleteTitle'), confirmText: t('common.delete'), cancelText: t('common.cancel'), danger: true });
     }
     return Promise.resolve(window.confirm(msg));
   }
@@ -105,9 +107,9 @@ App.pages.register('clients', (function () {
 
     if (!list.length) {
       el.innerHTML = query
-        ? '<div class="empty-state"><i class="bi bi-search"></i><h3>No matches</h3><p>Try a different search.</p></div>'
-        : '<div class="empty-state"><i class="bi bi-person-plus"></i><h3>No clients yet</h3>\
-            <p>Add your first client to autofill invoice details.</p>\
+        ? '<div class="empty-state"><i class="bi bi-search"></i><h3>' + App.util.escapeHtml(t('common.noMatches')) + '</h3><p>' + App.util.escapeHtml(t('common.tryDifferentSearch')) + '</p></div>'
+        : '<div class="empty-state"><i class="bi bi-person-plus"></i><h3>' + App.util.escapeHtml(t('clients.noClientsYet')) + '</h3>\
+            <p>' + App.util.escapeHtml(t('clients.noClientsHint')) + '</p>\
             </div>';
       if (selection) selection.syncBulkBar(card);
       return;
@@ -117,12 +119,12 @@ App.pages.register('clients', (function () {
     el.innerHTML = '<table class="data-table"><thead><tr>' +
       (selection ? selection.headerCell(allSelected) : '') +
       '<th style="width:72px"></th>\
-      <th>' + sortHead('name', 'Client') + '</th>\
-      <th>' + sortHead('contactName', 'Contact') + '</th>\
-      <th>' + sortHead('email', 'Email') + '</th>\
-      <th>' + sortHead('phone', 'Phone') + '</th>\
-      <th>' + sortHead('taxId', 'Tax ID') + '</th>\
-      <th>' + sortHead('address', 'Billing address') + '</th>\
+      <th>' + sortHead('name', t('common.client')) + '</th>\
+      <th>' + sortHead('contactName', t('common.contact')) + '</th>\
+      <th>' + sortHead('email', t('common.email')) + '</th>\
+      <th>' + sortHead('phone', t('common.phone')) + '</th>\
+      <th>' + sortHead('taxId', t('common.taxId')) + '</th>\
+      <th>' + sortHead('address', t('common.billingAddress')) + '</th>\
       <th></th>\
       </tr></thead><tbody>' + list.map(function (client) {
       var logoHtml = client.logo
@@ -138,8 +140,8 @@ App.pages.register('clients', (function () {
           <td>' + App.util.escapeHtml(client.taxId || '-') + '</td>\
           <td class="table-long">' + App.util.escapeHtml(client.address || '-') + '</td>\
           <td><div class="row-actions">\
-            <button class="btn btn-ghost btn-sm" data-row-act="invoice" title="Create invoice"><i class="bi bi-receipt"></i></button>\
-            <button class="btn btn-ghost btn-sm" data-row-act="delete" title="Delete"><i class="bi bi-trash"></i></button>\
+            <button class="btn btn-ghost btn-sm" data-row-act="invoice" title="' + App.util.escapeHtml(t('clients.createInvoice')) + '"><i class="bi bi-receipt"></i></button>\
+            <button class="btn btn-ghost btn-sm" data-row-act="delete" title="' + App.util.escapeHtml(t('common.delete')) + '"><i class="bi bi-trash"></i></button>\
           </div></td>\
         </tr>';
     }).join('') + '</tbody></table>';
@@ -169,9 +171,9 @@ App.pages.register('clients', (function () {
       if (!confirmed) return;
       App.store.deleteClient(id).then(function () {
         renderList();
-        App.toast('Client deleted', 'info');
+        App.toast(t('clients.deleted'), 'info');
       }).catch(function (err) {
-        App.toast((err && err.message) || 'Could not delete client', 'error');
+        App.toast((err && err.message) || t('clients.deleteFailed'), 'error');
       });
     });
   }
@@ -181,18 +183,18 @@ App.pages.register('clients', (function () {
     query = '';
     sort = { key: 'name', dir: 'asc' };
     selection = App.listSelection({
-      singular: 'client',
-      plural: 'clients',
+      singular: t('clients.singular'),
+      plural: t('clients.plural'),
       onChange: function () { renderList(); },
       onBulkDelete: function (ids) {
         confirmBulkDelete(ids.length).then(function (confirmed) {
           if (!confirmed) return;
           Promise.all(ids.map(function (id) { return App.store.deleteClient(id); })).then(function () {
             selection.clear();
-            App.toast(ids.length === 1 ? 'Client deleted' : (ids.length + ' clients deleted'), 'info');
+            App.toast(ids.length === 1 ? t('clients.deleted') : t('clients.deletedMany', { count: ids.length }), 'info');
             renderList();
           }).catch(function (err) {
-            App.toast((err && err.message) || 'Could not delete clients', 'error');
+            App.toast((err && err.message) || t('clients.deleteFailedMany'), 'error');
             renderList();
           });
         });

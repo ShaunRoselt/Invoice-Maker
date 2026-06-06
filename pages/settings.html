@@ -1,49 +1,50 @@
 <div class="page-header">
   <div>
-    <h1>Settings</h1>
-    <p class="subtitle">Defaults used to prefill new invoices.</p>
+    <h1 data-i18n="settings.title">Settings</h1>
+    <p class="subtitle" data-i18n="settings.subtitle">Defaults used to prefill new invoices.</p>
   </div>
 </div>
 
 <div class="settings-grid">
   <div>
     <div class="card card-pad">
-      <h3 class="section-title">Appearance</h3>
-      <div class="field"><label>Theme</label>
+      <h3 class="section-title" data-i18n="settings.appearance">Appearance</h3>
+      <div class="field"><label data-i18n="settings.theme">Theme</label>
         <select class="select" id="s-theme">
-          <option value="system">System</option>
-          <option value="dark">Dark</option>
-          <option value="light">Light</option>
+          <option value="system" data-i18n="settings.themeSystem">System</option>
+          <option value="dark" data-i18n="settings.themeDark">Dark</option>
+          <option value="light" data-i18n="settings.themeLight">Light</option>
         </select>
       </div>
-      <div class="field"><label>Language</label>
-        <select class="select" data-path="language" data-search-placeholder="Search languages" id="s-language">
+      <div class="field"><label data-i18n="settings.language">Language</label>
+        <select class="select" data-path="language" data-search-placeholder="Search languages" data-i18n-search-placeholder="settings.searchLanguages" id="s-language">
           <option value="en">English</option>
+          <option value="af">Afrikaans</option>
         </select>
       </div>
     </div>
 
     <div class="card card-pad" style="margin-top:22px">
-      <h3 class="section-title">Beta</h3>
+      <h3 class="section-title" data-i18n="settings.beta">Beta</h3>
       <div class="field">
         <div class="flex-between gap-12" style="margin-bottom:6px;align-items:center">
-          <label for="s-beta" style="margin:0">Enable Beta features</label>
+          <label for="s-beta" style="margin:0" data-i18n="settings.betaEnable">Enable Beta features</label>
           <label class="switch">
             <input id="s-beta" type="checkbox" data-path="betaMode">
             <span class="switch-slider" aria-hidden="true"></span>
           </label>
         </div>
-        <p class="text-muted" style="font-size:.82rem;margin:0">Enable to unlock template creation and editing. When
+        <p class="text-muted" style="font-size:.82rem;margin:0" data-i18n="settings.betaHint">Enable to unlock template creation and editing. When
           disabled, you can only choose from built-in templates.</p>
       </div>
     </div>
   </div>
   <div>
     <div class="card card-pad">
-      <h3 class="section-title">Invoice defaults</h3>
+      <h3 class="section-title" data-i18n="settings.invoiceDefaults">Invoice defaults</h3>
       <div class="field-row">
-        <div class="field"><label>Currency</label>
-          <select class="select" data-path="defaults.currency" data-search-placeholder="Search currencies">
+        <div class="field"><label data-i18n="settings.currency">Currency</label>
+          <select class="select" data-path="defaults.currency" data-search-placeholder="Search currencies" data-i18n-search-placeholder="settings.searchCurrencies">
             <option value="USD">USD — $</option>
             <option value="EUR">EUR — €</option>
             <option value="GBP">GBP — £</option>
@@ -79,23 +80,23 @@
             <option value="VND">VND — ₫</option>
           </select>
         </div>
-        <div class="field"><label>Default tax rate (%)</label><input class="input" type="number" min="0" step="any"
+        <div class="field"><label data-i18n="settings.defaultTaxRate">Default tax rate (%)</label><input class="input" type="number" min="0" step="any"
             data-path="defaults.taxRate"></div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Payment terms</label><input class="input" data-path="defaults.paymentTerms"></div>
-        <div class="field"><label>Invoice number prefix</label><input class="input" data-path="defaults.numberPrefix">
+        <div class="field"><label data-i18n="settings.paymentTerms">Payment terms</label><input class="input" data-path="defaults.paymentTerms"></div>
+        <div class="field"><label data-i18n="settings.numberPrefix">Invoice number prefix</label><input class="input" data-path="defaults.numberPrefix">
         </div>
       </div>
-      <div class="field"><label>Default notes</label><textarea class="textarea" data-path="defaults.notes"></textarea>
+      <div class="field"><label data-i18n="settings.defaultNotes">Default notes</label><textarea class="textarea" data-path="defaults.notes"></textarea>
       </div>
-      <div class="field"><label>Default payment instructions</label><textarea class="textarea"
+      <div class="field"><label data-i18n="settings.defaultPaymentInstructions">Default payment instructions</label><textarea class="textarea"
           data-path="defaults.paymentInstructions"></textarea></div>
-      <p class="text-muted" style="font-size:.82rem">Next invoice number: <strong id="s-next-number"></strong></p>
+      <p class="text-muted" style="font-size:.82rem"><span data-i18n="settings.nextInvoiceNumber">Next invoice number:</span> <strong id="s-next-number"></strong></p>
     </div>
   </div>
 </div>
 
 <div class="page-footer">
-  <button class="btn btn-primary" data-act="save"><i class="bi bi-check-lg"></i> Save settings</button>
+  <button class="btn btn-primary" data-act="save"><i class="bi bi-check-lg"></i> <span data-i18n="settings.saveSettings">Save settings</span></button>
 </div>

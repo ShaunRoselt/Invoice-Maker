@@ -8,6 +8,8 @@ App.pages.register('invoices', (function () {
   var sort = { key: 'updatedAt', dir: 'desc' };
   var selection = null;
 
+  function t(key, vars) { return App.i18n.t(key, vars); }
+
   function getFiltered() {
     var list = App.store.getInvoices();
     // Apply status filter first (when provided via route params)
@@ -53,9 +55,9 @@ App.pages.register('invoices', (function () {
 
   function confirmBulkDelete(count) {
     var dialogEl = document.querySelector('app-dialog');
-    var msg = count === 1 ? 'Delete 1 invoice?' : 'Delete ' + count + ' invoices?';
+    var msg = count === 1 ? t('invoices.deleteOne') : t('invoices.deleteMany', { count: count });
     if (dialogEl && typeof dialogEl.confirm === 'function') {
-      return dialogEl.confirm(msg, { title: 'Delete invoices', confirmText: 'Delete', cancelText: 'Cancel', danger: true });
+      return dialogEl.confirm(msg, { title: t('invoices.deleteTitle'), confirmText: t('common.delete'), cancelText: t('common.cancel'), danger: true });
     }
     return Promise.resolve(window.confirm(msg));
   }
@@ -76,7 +78,7 @@ App.pages.register('invoices', (function () {
           copy.status = 'draft';
           copy.createdAt = null; copy.updatedAt = null;
           App.store.saveInvoice(copy);
-          App.toast('Invoice duplicated', 'success');
+          App.toast(t('invoices.duplicated'), 'success');
           renderList();
         } else if (act === 'delete') {
           var inv = App.store.getInvoice(id);
@@ -86,20 +88,21 @@ App.pages.register('invoices', (function () {
           else if (typeof App !== 'undefined' && typeof App.dialog === 'function') askFn = App.dialog;
 
           var askResult;
+          var deleteMsg = t('invoices.deleteSingle', { number: inv.meta.number });
           try {
             if (askFn) {
-              askResult = askFn('Delete invoice ' + inv.meta.number + '?', { title: 'Delete invoice', confirmText: 'Delete', cancelText: 'Cancel', danger: true });
+              askResult = askFn(deleteMsg, { title: t('invoices.deleteSingleTitle'), confirmText: t('common.delete'), cancelText: t('common.cancel'), danger: true });
             } else {
-              askResult = window.confirm('Delete invoice ' + inv.meta.number + '?');
+              askResult = window.confirm(deleteMsg);
             }
           } catch (err) {
-            askResult = window.confirm('Delete invoice ' + inv.meta.number + '?');
+            askResult = window.confirm(deleteMsg);
           }
 
           Promise.resolve(askResult).then(function (confirmed) {
             if (!confirmed) return;
             App.store.deleteInvoice(id);
-            App.toast('Invoice deleted', 'info');
+            App.toast(t('invoices.deleted'), 'info');
             renderList();
           });
         }
@@ -116,9 +119,9 @@ App.pages.register('invoices', (function () {
 
     if (!list.length) {
       el.innerHTML = query
-        ? '<div class="empty-state"><i class="bi bi-search"></i><h3>No matches</h3><p>Try a different search.</p></div>'
-        : '<div class="empty-state"><i class="bi bi-inbox"></i><h3>No invoices yet</h3>\
-            <p>Pick a template to create your first invoice.</p>\
+        ? '<div class="empty-state"><i class="bi bi-search"></i><h3>' + App.util.escapeHtml(t('common.noMatches')) + '</h3><p>' + App.util.escapeHtml(t('common.tryDifferentSearch')) + '</p></div>'
+        : '<div class="empty-state"><i class="bi bi-inbox"></i><h3>' + App.util.escapeHtml(t('invoices.noInvoicesYet')) + '</h3>\
+            <p>' + App.util.escapeHtml(t('invoices.noInvoicesHint')) + '</p>\
             </div>';
       if (selection) selection.syncBulkBar(card);
       return;
@@ -127,25 +130,25 @@ App.pages.register('invoices', (function () {
     var allSelected = visibleIds.length > 0 && visibleIds.every(function (id) { return selection && selection.has(id); });
     el.innerHTML = '<table class="data-table"><thead><tr>' +
       (selection ? selection.headerCell(allSelected) : '') +
-      '<th>' + sortHead('number', 'Number') + '</th>\
-      <th>' + sortHead('client', 'Client') + '</th>\
-      <th>' + sortHead('issueDate', 'Issued') + '</th>\
-      <th>' + sortHead('dueDate', 'Due') + '</th>\
-      <th class="text-right">' + sortHead('total', 'Total') + '</th>\
-      <th>' + sortHead('status', 'Status') + '</th><th></th>\
+      '<th>' + sortHead('number', t('common.number')) + '</th>\
+      <th>' + sortHead('client', t('common.client')) + '</th>\
+      <th>' + sortHead('issueDate', t('common.issued')) + '</th>\
+      <th>' + sortHead('dueDate', t('common.due')) + '</th>\
+      <th class="text-right">' + sortHead('total', t('common.total')) + '</th>\
+      <th>' + sortHead('status', t('common.status')) + '</th><th></th>\
       </tr></thead><tbody>' + list.map(function (inv) {
-      var t = App.invoiceModel.computeTotals(inv).total;
+      var total = App.invoiceModel.computeTotals(inv).total;
       return '<tr data-id="' + inv.id + '">' +
         (selection ? selection.rowCell(inv.id) : '') +
         '<td><strong>' + App.util.escapeHtml(inv.meta.number) + '</strong></td>\
           <td>' + App.util.escapeHtml(inv.buyer.name || '—') + '</td>\
           <td>' + App.util.formatDate(inv.meta.issueDate) + '</td>\
           <td>' + App.util.formatDate(inv.meta.dueDate) + '</td>\
-          <td class="text-right mono">' + App.util.formatMoney(t, inv.meta.currency) + '</td>\
-          <td><span class="badge badge-' + inv.status + '">' + inv.status + '</span></td>\
+          <td class="text-right mono">' + App.util.formatMoney(total, inv.meta.currency) + '</td>\
+          <td><span class="badge badge-' + inv.status + '">' + App.util.escapeHtml(App.i18n.statusLabel(inv.status)) + '</span></td>\
           <td><div class="row-actions">\
-            <button class="btn btn-ghost btn-sm" data-row-act="duplicate" title="Duplicate"><i class="bi bi-files"></i></button>\
-            <button class="btn btn-ghost btn-sm" data-row-act="delete" title="Delete"><i class="bi bi-trash"></i></button>\
+            <button class="btn btn-ghost btn-sm" data-row-act="duplicate" title="' + App.util.escapeHtml(t('common.duplicate')) + '"><i class="bi bi-files"></i></button>\
+            <button class="btn btn-ghost btn-sm" data-row-act="delete" title="' + App.util.escapeHtml(t('common.delete')) + '"><i class="bi bi-trash"></i></button>\
           </div></td>\
         </tr>';
     }).join('') + '</tbody></table>';
@@ -177,15 +180,15 @@ App.pages.register('invoices', (function () {
     if (params.status) statusFilter = params.status;
     sort = { key: 'updatedAt', dir: 'desc' };
     selection = App.listSelection({
-      singular: 'invoice',
-      plural: 'invoices',
+      singular: t('invoices.singular'),
+      plural: t('invoices.plural'),
       onChange: function () { renderList(); },
       onBulkDelete: function (ids) {
         confirmBulkDelete(ids.length).then(function (confirmed) {
           if (!confirmed) return;
           ids.forEach(function (id) { App.store.deleteInvoice(id); });
           selection.clear();
-          App.toast(ids.length === 1 ? 'Invoice deleted' : (ids.length + ' invoices deleted'), 'info');
+          App.toast(ids.length === 1 ? t('invoices.deleted') : t('invoices.deletedMany', { count: ids.length }), 'info');
           renderList();
         });
       }
