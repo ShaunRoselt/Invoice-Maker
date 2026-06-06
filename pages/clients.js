@@ -5,6 +5,7 @@ App.pages.register('clients', (function () {
   var rootEl = null;
   var query = '';
   var sort = { key: 'name', dir: 'asc' };
+  var selection = null;
 
   function displayName(client) {
     return client.name || client.contactName || 'Unnamed client';
@@ -69,9 +70,38 @@ App.pages.register('clients', (function () {
     });
   }
 
+  function confirmBulkDelete(count) {
+    var dialogEl = document.querySelector('app-dialog');
+    var msg = count === 1 ? 'Delete 1 client?' : 'Delete ' + count + ' clients?';
+    if (dialogEl && typeof dialogEl.confirm === 'function') {
+      return dialogEl.confirm(msg, { title: 'Delete clients', confirmText: 'Delete', cancelText: 'Cancel', danger: true });
+    }
+    return Promise.resolve(window.confirm(msg));
+  }
+
+  function bindRowActions(el) {
+    el.querySelectorAll('tr[data-id]').forEach(function (tr) {
+      var id = tr.getAttribute('data-id');
+      tr.addEventListener('click', function (e) {
+        var actBtn = e.target.closest('[data-row-act]');
+        if (!actBtn) return;
+        e.stopPropagation();
+        var act = actBtn.getAttribute('data-row-act');
+        if (act === 'invoice') {
+          App.router.navigate({ page: 'templates', client: id });
+        } else if (act === 'delete') {
+          deleteClient(id);
+        }
+      });
+    });
+  }
+
   function renderList() {
     var list = getRows();
     var el = rootEl.querySelector('#client-list');
+    var card = rootEl.querySelector('#client-list-card');
+    var visibleIds = list.map(function (client) { return client.id; });
+    if (selection) selection.prune(visibleIds);
 
     if (!list.length) {
       el.innerHTML = query
@@ -79,11 +109,14 @@ App.pages.register('clients', (function () {
         : '<div class="empty-state"><i class="bi bi-person-plus"></i><h3>No clients yet</h3>\
             <p>Add your first client to autofill invoice details.</p>\
             </div>';
+      if (selection) selection.syncBulkBar(card);
       return;
     }
 
-    el.innerHTML = '<table class="data-table"><thead><tr>\
-      <th style="width:72px"></th>\
+    var allSelected = visibleIds.length > 0 && visibleIds.every(function (id) { return selection && selection.has(id); });
+    el.innerHTML = '<table class="data-table"><thead><tr>' +
+      (selection ? selection.headerCell(allSelected) : '') +
+      '<th style="width:72px"></th>\
       <th>' + sortHead('name', 'Client') + '</th>\
       <th>' + sortHead('contactName', 'Contact') + '</th>\
       <th>' + sortHead('email', 'Email') + '</th>\
@@ -95,8 +128,9 @@ App.pages.register('clients', (function () {
       var logoHtml = client.logo
         ? '<img class="list-logo" src="' + App.util.escapeHtml(client.logo) + '" alt="logo">'
         : '<div class="logo-placeholder"><i class="bi bi-image"></i></div>';
-      return '<tr data-id="' + client.id + '">\
-          <td class="logo-col">' + logoHtml + '</td>\
+      return '<tr data-id="' + client.id + '">' +
+        (selection ? selection.rowCell(client.id) : '') +
+        '<td class="logo-col">' + logoHtml + '</td>\
           <td><strong>' + App.util.escapeHtml(displayName(client)) + '</strong></td>\
           <td>' + App.util.escapeHtml(client.contactName || '-') + '</td>\
           <td>' + App.util.escapeHtml(client.email || '-') + '</td>\
@@ -120,24 +154,12 @@ App.pages.register('clients', (function () {
     });
 
     hydrateRowLogos(list);
-
-    el.querySelectorAll('tr[data-id]').forEach(function (tr) {
-      var id = tr.getAttribute('data-id');
-      tr.addEventListener('click', function (e) {
-        var actBtn = e.target.closest('[data-row-act]');
-        if (!actBtn) {
-          App.router.navigate({ page: 'client-editor', id: id });
-          return;
-        }
-        e.stopPropagation();
-        var act = actBtn.getAttribute('data-row-act');
-        if (act === 'invoice') {
-          App.router.navigate({ page: 'templates', client: id });
-        } else if (act === 'delete') {
-          deleteClient(id);
-        }
+    bindRowActions(el);
+    if (selection) {
+      selection.bindTable(el.querySelector('table'), visibleIds, card, function (id) {
+        App.router.navigate({ page: 'client-editor', id: id });
       });
-    });
+    }
   }
 
   function deleteClient(id) {
@@ -158,6 +180,24 @@ App.pages.register('clients', (function () {
     rootEl = root;
     query = '';
     sort = { key: 'name', dir: 'asc' };
+    selection = App.listSelection({
+      singular: 'client',
+      plural: 'clients',
+      onChange: function () { renderList(); },
+      onBulkDelete: function (ids) {
+        confirmBulkDelete(ids.length).then(function (confirmed) {
+          if (!confirmed) return;
+          Promise.all(ids.map(function (id) { return App.store.deleteClient(id); })).then(function () {
+            selection.clear();
+            App.toast(ids.length === 1 ? 'Client deleted' : (ids.length + ' clients deleted'), 'info');
+            renderList();
+          }).catch(function (err) {
+            App.toast((err && err.message) || 'Could not delete clients', 'error');
+            renderList();
+          });
+        });
+      }
+    });
     renderList();
 
     root.querySelector('[data-act="new"]').addEventListener('click', function () {
@@ -170,7 +210,7 @@ App.pages.register('clients', (function () {
     }, 150));
   }
 
-  function unmount() { rootEl = null; }
+  function unmount() { rootEl = null; selection = null; }
 
   return { mount: mount, unmount: unmount };
 })());

@@ -556,6 +556,103 @@ app-sidebar {
   background: var(--surface-hover);
 }
 
+/* Multi-select rows (shift+click) */
+.list-bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--brand-soft);
+}
+
+.list-bulk-bar[hidden] {
+  display: none !important;
+}
+
+.list-bulk-left {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.list-bulk-count {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.list-bulk-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.list-bulk-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.card.has-selection {
+  box-shadow: 0 0 0 2px var(--brand-soft), var(--shadow-sm);
+}
+
+.data-table.selection-active .select-col-head .row-check,
+.data-table tbody tr:hover .row-check,
+.data-table tbody tr.row-selected .row-check,
+.data-table .row-check.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.data-table tbody tr.row-selected {
+  background: var(--brand-soft);
+}
+
+.data-table tbody tr.row-selected:hover {
+  background: color-mix(in srgb, var(--brand-soft) 85%, var(--surface-2));
+}
+
+.select-col {
+  width: 42px;
+  padding-left: 12px !important;
+  padding-right: 4px !important;
+  vertical-align: middle;
+}
+
+.row-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s;
+  cursor: pointer;
+}
+
+.row-check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+
+[data-theme="dark"] .data-table tbody tr.row-selected {
+  background: color-mix(in srgb, var(--brand) 18%, var(--surface));
+}
+
+[data-theme="dark"] .list-bulk-bar {
+  background: color-mix(in srgb, var(--brand) 16%, var(--surface));
+}
+
 /* ----------------------------- Forms ----------------------------- */
 .field {
   margin-bottom: 14px;

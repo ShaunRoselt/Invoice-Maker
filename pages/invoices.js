@@ -6,6 +6,7 @@ App.pages.register('invoices', (function () {
   var query = '';
   var statusFilter = null;
   var sort = { key: 'updatedAt', dir: 'desc' };
+  var selection = null;
 
   function getFiltered() {
     var list = App.store.getInvoices();
@@ -50,9 +51,68 @@ App.pages.register('invoices', (function () {
     return '<button class="sort-btn' + (cls ? ' ' + cls : '') + '" data-sort="' + key + '">' + label + ' <i class="bi ' + icon + '"></i></button>';
   }
 
+  function confirmBulkDelete(count) {
+    var dialogEl = document.querySelector('app-dialog');
+    var msg = count === 1 ? 'Delete 1 invoice?' : 'Delete ' + count + ' invoices?';
+    if (dialogEl && typeof dialogEl.confirm === 'function') {
+      return dialogEl.confirm(msg, { title: 'Delete invoices', confirmText: 'Delete', cancelText: 'Cancel', danger: true });
+    }
+    return Promise.resolve(window.confirm(msg));
+  }
+
+  function bindRowActions(el) {
+    el.querySelectorAll('tr[data-id]').forEach(function (tr) {
+      var id = tr.getAttribute('data-id');
+      tr.addEventListener('click', function (e) {
+        var actBtn = e.target.closest('[data-row-act]');
+        if (!actBtn) return;
+        e.stopPropagation();
+        var act = actBtn.getAttribute('data-row-act');
+        if (act === 'duplicate') {
+          var src = App.store.getInvoice(id);
+          var copy = App.util.deepClone(src);
+          copy.id = App.util.uuid('inv');
+          copy.meta.number = App.store.nextInvoiceNumber();
+          copy.status = 'draft';
+          copy.createdAt = null; copy.updatedAt = null;
+          App.store.saveInvoice(copy);
+          App.toast('Invoice duplicated', 'success');
+          renderList();
+        } else if (act === 'delete') {
+          var inv = App.store.getInvoice(id);
+          var dialogEl = document.querySelector('app-dialog');
+          var askFn = null;
+          if (dialogEl && typeof dialogEl.confirm === 'function') askFn = function (msg, opts) { return dialogEl.confirm(msg, opts); };
+          else if (typeof App !== 'undefined' && typeof App.dialog === 'function') askFn = App.dialog;
+
+          var askResult;
+          try {
+            if (askFn) {
+              askResult = askFn('Delete invoice ' + inv.meta.number + '?', { title: 'Delete invoice', confirmText: 'Delete', cancelText: 'Cancel', danger: true });
+            } else {
+              askResult = window.confirm('Delete invoice ' + inv.meta.number + '?');
+            }
+          } catch (err) {
+            askResult = window.confirm('Delete invoice ' + inv.meta.number + '?');
+          }
+
+          Promise.resolve(askResult).then(function (confirmed) {
+            if (!confirmed) return;
+            App.store.deleteInvoice(id);
+            App.toast('Invoice deleted', 'info');
+            renderList();
+          });
+        }
+      });
+    });
+  }
+
   function renderList() {
     var list = getFiltered();
     var el = rootEl.querySelector('#inv-list');
+    var card = rootEl.querySelector('#inv-list-card');
+    var visibleIds = list.map(function (inv) { return inv.id; });
+    if (selection) selection.prune(visibleIds);
 
     if (!list.length) {
       el.innerHTML = query
@@ -60,11 +120,14 @@ App.pages.register('invoices', (function () {
         : '<div class="empty-state"><i class="bi bi-inbox"></i><h3>No invoices yet</h3>\
             <p>Pick a template to create your first invoice.</p>\
             </div>';
+      if (selection) selection.syncBulkBar(card);
       return;
     }
 
-    el.innerHTML = '<table class="data-table"><thead><tr>\
-      <th>' + sortHead('number', 'Number') + '</th>\
+    var allSelected = visibleIds.length > 0 && visibleIds.every(function (id) { return selection && selection.has(id); });
+    el.innerHTML = '<table class="data-table"><thead><tr>' +
+      (selection ? selection.headerCell(allSelected) : '') +
+      '<th>' + sortHead('number', 'Number') + '</th>\
       <th>' + sortHead('client', 'Client') + '</th>\
       <th>' + sortHead('issueDate', 'Issued') + '</th>\
       <th>' + sortHead('dueDate', 'Due') + '</th>\
@@ -72,8 +135,9 @@ App.pages.register('invoices', (function () {
       <th>' + sortHead('status', 'Status') + '</th><th></th>\
       </tr></thead><tbody>' + list.map(function (inv) {
       var t = App.invoiceModel.computeTotals(inv).total;
-      return '<tr data-id="' + inv.id + '">\
-          <td><strong>' + App.util.escapeHtml(inv.meta.number) + '</strong></td>\
+      return '<tr data-id="' + inv.id + '">' +
+        (selection ? selection.rowCell(inv.id) : '') +
+        '<td><strong>' + App.util.escapeHtml(inv.meta.number) + '</strong></td>\
           <td>' + App.util.escapeHtml(inv.buyer.name || '—') + '</td>\
           <td>' + App.util.formatDate(inv.meta.issueDate) + '</td>\
           <td>' + App.util.formatDate(inv.meta.dueDate) + '</td>\
@@ -95,59 +159,12 @@ App.pages.register('invoices', (function () {
       });
     });
 
-    el.querySelectorAll('tr[data-id]').forEach(function (tr) {
-      var id = tr.getAttribute('data-id');
-      tr.addEventListener('click', function (e) {
-        var actBtn = e.target.closest('[data-row-act]');
-        if (!actBtn) {
-          App.router.navigate({ page: 'invoice-editor', id: id });
-          return;
-        }
-        e.stopPropagation();
-        var act = actBtn.getAttribute('data-row-act');
-        if (act === 'duplicate') {
-          var src = App.store.getInvoice(id);
-          var copy = App.util.deepClone(src);
-          copy.id = App.util.uuid('inv');
-          copy.meta.number = App.store.nextInvoiceNumber();
-          copy.status = 'draft';
-          copy.createdAt = null; copy.updatedAt = null;
-          App.store.saveInvoice(copy);
-          App.toast('Invoice duplicated', 'success');
-          renderList();
-        } else if (act === 'delete') {
-          var inv = App.store.getInvoice(id);
-          var dialogEl = document.querySelector('app-dialog');
-          console.debug('invoices: delete clicked', id, 'inv=', inv && inv.meta && inv.meta.number, 'dialogEl=', dialogEl);
-          var askFn = null;
-          if (dialogEl && typeof dialogEl.confirm === 'function') askFn = function (msg, opts) { return dialogEl.confirm(msg, opts); };
-          else if (typeof App !== 'undefined' && typeof App.dialog === 'function') askFn = App.dialog;
-          else if (typeof window.appDialog === 'function') askFn = window.appDialog;
-
-          var askResult;
-          try {
-            if (askFn) {
-              console.debug('invoices: using askFn');
-              askResult = askFn('Delete invoice ' + inv.meta.number + '?', { title: 'Delete invoice', confirmText: 'Delete', cancelText: 'Cancel', danger: true });
-            } else {
-              console.debug('invoices: falling back to window.confirm');
-              askResult = window.confirm('Delete invoice ' + inv.meta.number + '?');
-            }
-          } catch (err) {
-            console.error('Confirmation dialog error', err);
-            askResult = window.confirm('Delete invoice ' + inv.meta.number + '?');
-          }
-
-          Promise.resolve(askResult).then(function (confirmed) {
-            console.debug('invoices: confirmation result', confirmed);
-            if (!confirmed) return;
-            App.store.deleteInvoice(id);
-            App.toast('Invoice deleted', 'info');
-            renderList();
-          });
-        }
+    bindRowActions(el);
+    if (selection) {
+      selection.bindTable(el.querySelector('table'), visibleIds, card, function (id) {
+        App.router.navigate({ page: 'invoice-editor', id: id });
       });
-    });
+    }
   }
 
   function mount(root) {
@@ -159,6 +176,20 @@ App.pages.register('invoices', (function () {
     if (params.q) query = params.q;
     if (params.status) statusFilter = params.status;
     sort = { key: 'updatedAt', dir: 'desc' };
+    selection = App.listSelection({
+      singular: 'invoice',
+      plural: 'invoices',
+      onChange: function () { renderList(); },
+      onBulkDelete: function (ids) {
+        confirmBulkDelete(ids.length).then(function (confirmed) {
+          if (!confirmed) return;
+          ids.forEach(function (id) { App.store.deleteInvoice(id); });
+          selection.clear();
+          App.toast(ids.length === 1 ? 'Invoice deleted' : (ids.length + ' invoices deleted'), 'info');
+          renderList();
+        });
+      }
+    });
     renderList();
 
     // If a status filter or initial query was provided, reflect it in the
@@ -197,7 +228,7 @@ App.pages.register('invoices', (function () {
     }
   }
 
-  function unmount() { rootEl = null; }
+  function unmount() { rootEl = null; selection = null; }
 
   return { mount: mount, unmount: unmount };
 })());

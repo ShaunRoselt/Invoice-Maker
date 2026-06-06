@@ -5,6 +5,7 @@ App.pages.register('businesses', (function () {
   var rootEl = null;
   var query = '';
   var sort = { key: 'name', dir: 'asc' };
+  var selection = null;
 
   function displayName(business) {
     return business.name || business.contactName || 'Unnamed business';
@@ -70,9 +71,38 @@ App.pages.register('businesses', (function () {
     });
   }
 
+  function confirmBulkDelete(count) {
+    var dialogEl = document.querySelector('app-dialog');
+    var msg = count === 1 ? 'Delete 1 business?' : 'Delete ' + count + ' businesses?';
+    if (dialogEl && typeof dialogEl.confirm === 'function') {
+      return dialogEl.confirm(msg, { title: 'Delete businesses', confirmText: 'Delete', cancelText: 'Cancel', danger: true });
+    }
+    return Promise.resolve(window.confirm(msg));
+  }
+
+  function bindRowActions(el) {
+    el.querySelectorAll('tr[data-id]').forEach(function (tr) {
+      var id = tr.getAttribute('data-id');
+      tr.addEventListener('click', function (e) {
+        var actBtn = e.target.closest('[data-row-act]');
+        if (!actBtn) return;
+        e.stopPropagation();
+        var act = actBtn.getAttribute('data-row-act');
+        if (act === 'invoice') {
+          App.router.navigate({ page: 'templates', business: id });
+        } else if (act === 'delete') {
+          deleteBusiness(id);
+        }
+      });
+    });
+  }
+
   function renderList() {
     var list = getRows();
     var el = rootEl.querySelector('#business-list');
+    var card = rootEl.querySelector('#business-list-card');
+    var visibleIds = list.map(function (business) { return business.id; });
+    if (selection) selection.prune(visibleIds);
 
     if (!list.length) {
       el.innerHTML = query
@@ -80,11 +110,14 @@ App.pages.register('businesses', (function () {
         : '<div class="empty-state"><i class="bi bi-building-add"></i><h3>No businesses yet</h3>\
             <p>Add a sender profile to autofill invoice business details.</p>\
             </div>';
+      if (selection) selection.syncBulkBar(card);
       return;
     }
 
-    el.innerHTML = '<table class="data-table"><thead><tr>\
-      <th style="width:72px"></th>\
+    var allSelected = visibleIds.length > 0 && visibleIds.every(function (id) { return selection && selection.has(id); });
+    el.innerHTML = '<table class="data-table"><thead><tr>' +
+      (selection ? selection.headerCell(allSelected) : '') +
+      '<th style="width:72px"></th>\
       <th>' + sortHead('name', 'Business') + '</th>\
       <th>' + sortHead('contactName', 'Contact') + '</th>\
       <th>' + sortHead('email', 'Email') + '</th>\
@@ -96,8 +129,9 @@ App.pages.register('businesses', (function () {
       var logoHtml = business.logo
         ? '<img class="list-logo" src="' + App.util.escapeHtml(business.logo) + '" alt="logo">'
         : '<div class="logo-placeholder"><i class="bi bi-image"></i></div>';
-      return '<tr data-id="' + business.id + '">\
-          <td class="logo-col">' + logoHtml + '</td>\
+      return '<tr data-id="' + business.id + '">' +
+        (selection ? selection.rowCell(business.id) : '') +
+        '<td class="logo-col">' + logoHtml + '</td>\
           <td><strong>' + App.util.escapeHtml(displayName(business)) + '</strong></td>\
           <td>' + App.util.escapeHtml(business.contactName || '-') + '</td>\
           <td>' + App.util.escapeHtml(business.email || '-') + '</td>\
@@ -121,24 +155,12 @@ App.pages.register('businesses', (function () {
     });
 
     hydrateRowLogos(list);
-
-    el.querySelectorAll('tr[data-id]').forEach(function (tr) {
-      var id = tr.getAttribute('data-id');
-      tr.addEventListener('click', function (e) {
-        var actBtn = e.target.closest('[data-row-act]');
-        if (!actBtn) {
-          App.router.navigate({ page: 'business-editor', id: id });
-          return;
-        }
-        e.stopPropagation();
-        var act = actBtn.getAttribute('data-row-act');
-        if (act === 'invoice') {
-          App.router.navigate({ page: 'templates', business: id });
-        } else if (act === 'delete') {
-          deleteBusiness(id);
-        }
+    bindRowActions(el);
+    if (selection) {
+      selection.bindTable(el.querySelector('table'), visibleIds, card, function (id) {
+        App.router.navigate({ page: 'business-editor', id: id });
       });
-    });
+    }
   }
 
   function deleteBusiness(id) {
@@ -159,6 +181,24 @@ App.pages.register('businesses', (function () {
     rootEl = root;
     query = '';
     sort = { key: 'name', dir: 'asc' };
+    selection = App.listSelection({
+      singular: 'business',
+      plural: 'businesses',
+      onChange: function () { renderList(); },
+      onBulkDelete: function (ids) {
+        confirmBulkDelete(ids.length).then(function (confirmed) {
+          if (!confirmed) return;
+          Promise.all(ids.map(function (id) { return App.store.deleteBusiness(id); })).then(function () {
+            selection.clear();
+            App.toast(ids.length === 1 ? 'Business deleted' : (ids.length + ' businesses deleted'), 'info');
+            renderList();
+          }).catch(function (err) {
+            App.toast((err && err.message) || 'Could not delete businesses', 'error');
+            renderList();
+          });
+        });
+      }
+    });
     renderList();
 
     root.querySelector('[data-act="new"]').addEventListener('click', function () {
@@ -171,7 +211,7 @@ App.pages.register('businesses', (function () {
     }, 150));
   }
 
-  function unmount() { rootEl = null; }
+  function unmount() { rootEl = null; selection = null; }
 
   return { mount: mount, unmount: unmount };
 })());
