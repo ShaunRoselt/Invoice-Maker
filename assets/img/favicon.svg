@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none">
+  <defs>
+    <linearGradient id="shell" x1="10" y1="8" x2="84" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#17324F"/>
+      <stop offset="0.52" stop-color="#0C1E31"/>
+      <stop offset="1" stop-color="#091521"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="18" y1="14" x2="74" y2="78" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6FD4FF" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#2FA9E6" stop-opacity="0.2"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="28" y1="20" x2="68" y2="74" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E8F2FA"/>
+    </linearGradient>
+    <linearGradient id="fold" x1="58" y1="22" x2="69" y2="34" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#CFE3F2"/>
+      <stop offset="1" stop-color="#F8FBFE"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="26" y1="60" x2="71" y2="69" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#27B4F3"/>
+      <stop offset="1" stop-color="#097FD8"/>
+    </linearGradient>
+    <filter id="shadow" x="17" y="14" width="62" height="68" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="6" stdDeviation="4.5" flood-color="#03101C" flood-opacity="0.34"/>
+    </filter>
+  </defs>
+
+  <rect x="4" y="4" width="88" height="88" rx="24" fill="url(#shell)"/>
+  <rect x="6.5" y="6.5" width="83" height="83" rx="21.5" stroke="#82D8FF" stroke-opacity="0.28"/>
+  <circle cx="26" cy="18" r="19" fill="url(#glow)" fill-opacity="0.18"/>
+  <circle cx="74" cy="80" r="24" fill="url(#glow)" fill-opacity="0.12"/>
+  <path d="M18 69.5C29.5 61 40.5 69 51.5 61.5C59.5 56 66 49 78 52.5" stroke="#79D8FF" stroke-opacity="0.2" stroke-width="3.5" stroke-linecap="round"/>
+
+  <g filter="url(#shadow)">
+    <path d="M28 18H55.5L68 30.5V68C68 72.4183 64.4183 76 60 76H28C23.5817 76 20 72.4183 20 68V26C20 21.5817 23.5817 18 28 18Z" fill="url(#paper)"/>
+    <path d="M55.5 18L68 30.5H60C57.5147 30.5 55.5 28.4853 55.5 26V18Z" fill="url(#fold)"/>
+    <path d="M55.5 18L68 30.5H60C57.5147 30.5 55.5 28.4853 55.5 26V18Z" stroke="#C3D7E6" stroke-linejoin="round"/>
+    <path d="M28 18H55.5L68 30.5V68C68 72.4183 64.4183 76 60 76H28C23.5817 76 20 72.4183 20 68V26C20 21.5817 23.5817 18 28 18Z" stroke="#D4E3EF"/>
+  </g>
+
+  <rect x="27" y="32" width="26" height="4.5" rx="2.25" fill="#17324F" fill-opacity="0.9"/>
+  <rect x="27" y="41" width="34" height="3.5" rx="1.75" fill="#8AA5BC" fill-opacity="0.75"/>
+  <rect x="27" y="48.5" width="27" height="3.5" rx="1.75" fill="#8AA5BC" fill-opacity="0.65"/>
+  <rect x="27" y="57" width="20" height="11" rx="5.5" fill="url(#accent)"/>
+  <rect x="50.5" y="58" width="10.5" height="2.8" rx="1.4" fill="#7E97AD" fill-opacity="0.8"/>
+  <rect x="50.5" y="63" width="7.5" height="2.8" rx="1.4" fill="#7E97AD" fill-opacity="0.62"/>
+
+  <circle cx="64" cy="67" r="12" fill="#0D2235"/>
+  <circle cx="64" cy="67" r="11" stroke="#83D9FF" stroke-opacity="0.28"/>
+  <path d="M58.5 67.4L62.1 70.9L69.8 62.9" stroke="#78D7FF" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
