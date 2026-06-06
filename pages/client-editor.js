@@ -22,7 +22,11 @@ App.pages.register('client-editor', (function () {
     rootEl.querySelector('#client-editor-title').textContent = client.createdAt ? 'Edit client' : 'New client';
     rootEl.querySelector('[data-act="delete"]').style.display = client.createdAt ? '' : 'none';
     var form = rootEl.querySelector('#contact-form');
-    if (form && typeof form.setData === 'function') form.setData(client);
+    if (!form || typeof form.setData !== 'function') return;
+    App.store.ensureContactLogo(client, 'client').then(function (hydrated) {
+      client = hydrated;
+      form.setData(client);
+    });
   }
 
   function save() {
@@ -36,9 +40,12 @@ App.pages.register('client-editor', (function () {
     }
     var data = form && typeof form.getData === 'function' ? form.getData() : {};
     client = Object.assign(client || {}, data);
-    client = App.store.saveClient(client);
-    App.toast('Client saved', 'success');
-    App.router.navigate({ page: 'clients' });
+    App.store.saveClient(client).then(function () {
+      App.toast('Client saved', 'success');
+      App.router.navigate({ page: 'clients' });
+    }).catch(function (err) {
+      App.toast((err && err.message) || 'Could not save client', 'error');
+    });
   }
 
   function mount(root, params) {
@@ -55,9 +62,12 @@ App.pages.register('client-editor', (function () {
       if (!client.createdAt) return;
       confirmDelete(client).then(function (confirmed) {
         if (!confirmed) return;
-        App.store.deleteClient(client.id);
-        App.toast('Client deleted', 'info');
-        App.router.navigate({ page: 'clients' });
+        App.store.deleteClient(client.id).then(function () {
+          App.toast('Client deleted', 'info');
+          App.router.navigate({ page: 'clients' });
+        }).catch(function (err) {
+          App.toast((err && err.message) || 'Could not delete client', 'error');
+        });
       });
     });
   }

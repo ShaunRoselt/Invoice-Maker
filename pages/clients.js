@@ -55,6 +55,20 @@ App.pages.register('clients', (function () {
     return '<button class="sort-btn" data-sort="' + key + '">' + label + ' <i class="bi ' + icon + '"></i></button>';
   }
 
+  function hydrateRowLogos(list) {
+    list.forEach(function (client) {
+      if (client.logo || !client.hasLogo) return;
+      App.store.loadContactLogo('client', client.id).then(function (url) {
+        if (!url) return;
+        var row = rootEl.querySelector('#client-list tr[data-id="' + client.id + '"]');
+        if (!row) return;
+        var cell = row.querySelector('.logo-col');
+        if (!cell) return;
+        cell.innerHTML = '<img class="list-logo" src="' + App.util.escapeHtml(url) + '" alt="logo">';
+      });
+    });
+  }
+
   function renderList() {
     var list = getRows();
     var el = rootEl.querySelector('#client-list');
@@ -78,7 +92,9 @@ App.pages.register('clients', (function () {
       <th>' + sortHead('address', 'Billing address') + '</th>\
       <th></th>\
       </tr></thead><tbody>' + list.map(function (client) {
-      var logoHtml = client.logo ? '<img class="list-logo" src="' + App.util.escapeHtml(client.logo) + '" alt="logo">' : '<div class="logo-placeholder"><i class="bi bi-image"></i></div>';
+      var logoHtml = client.logo
+        ? '<img class="list-logo" src="' + App.util.escapeHtml(client.logo) + '" alt="logo">'
+        : '<div class="logo-placeholder"><i class="bi bi-image"></i></div>';
       return '<tr data-id="' + client.id + '">\
           <td class="logo-col">' + logoHtml + '</td>\
           <td><strong>' + App.util.escapeHtml(displayName(client)) + '</strong></td>\
@@ -102,6 +118,8 @@ App.pages.register('clients', (function () {
         renderList();
       });
     });
+
+    hydrateRowLogos(list);
 
     el.querySelectorAll('tr[data-id]').forEach(function (tr) {
       var id = tr.getAttribute('data-id');
@@ -127,9 +145,12 @@ App.pages.register('clients', (function () {
     if (!client) return;
     confirmDelete(client).then(function (confirmed) {
       if (!confirmed) return;
-      App.store.deleteClient(id);
-      renderList();
-      App.toast('Client deleted', 'info');
+      App.store.deleteClient(id).then(function () {
+        renderList();
+        App.toast('Client deleted', 'info');
+      }).catch(function (err) {
+        App.toast((err && err.message) || 'Could not delete client', 'error');
+      });
     });
   }
 

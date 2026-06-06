@@ -176,18 +176,13 @@ app-header {
 .app-header .brand .logo-mark {
   width: 32px;
   height: 32px;
-  display: grid;
-  place-items: center;
-  background: var(--brand);
-  color: #fff;
-  border-radius: 9px;
-  font-size: 1.1rem;
+  display: block;
+  flex: 0 0 32px;
+  object-fit: contain;
 }
 
 [data-theme="dark"] .app-header .brand .logo-mark {
-  background: var(--surface);
-  color: var(--brand);
-  border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+  filter: drop-shadow(0 0 0.35rem rgba(111, 212, 255, 0.08));
 }
 
 .app-header .header-actions {
@@ -393,6 +388,14 @@ app-sidebar {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.page-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 4px;
 }
 
 .breadcrumbs {

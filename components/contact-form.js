@@ -25,13 +25,33 @@
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   }
 
+  function websiteHost(value) {
+    var v = (value || '').trim();
+    if (!v) return '';
+    return v.replace(/^https?:\/\//i, '').split(/[/?#]/)[0];
+  }
+
+  function isValidWebsite(value) {
+    var host = websiteHost(value);
+    if (!host) return false;
+    if (host === 'localhost') return true;
+    return /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i.test(host);
+  }
+
+  function normalizeWebsite(value) {
+    var v = (value || '').trim();
+    if (!v) return '';
+    if (/^https?:\/\//i.test(v)) return v;
+    return 'https://' + v.replace(/^\/+/, '');
+  }
+
   class ContactForm extends HTMLElement {
     connectedCallback() {
       if (this._init) return;
       this.innerHTML = '\
         <form class="card card-pad record-form contact-form-inner" novalidate>\
-          <div class="field">\
-            <label>Logo <span class="field-optional">(optional)</span></label>\
+          <div class="field" data-wrap="logo">\
+            <label>Logo <span class="field-optional">(optional, max 10 MB)</span></label>\
             <div class="logo-field">\
               <img class="logo-preview" alt="Logo preview" style="display:none">\
               <div class="logo-controls">\
@@ -39,6 +59,7 @@
                 <button class="btn btn-ghost btn-sm contact-remove-logo" type="button" style="display:none">Remove</button>\
               </div>\
             </div>\
+            <p class="field-error" data-error="logo" hidden></p>\
           </div>\
           <div class="field" data-wrap="name">\
             <label>Name <span class="field-required" aria-hidden="true">*</span></label>\
@@ -62,7 +83,7 @@
           </div>\
           <div class="field" data-wrap="website">\
             <label>Website <span class="field-optional">(optional)</span></label>\
-            <input class="input" type="url" data-field="website" placeholder="https://example.com" autocomplete="url">\
+            <input class="input" type="text" data-field="website" placeholder="example.com" autocomplete="url">\
             <p class="field-error" data-error="website" hidden></p>\
           </div>\
           <div class="field" data-wrap="address">\
@@ -91,11 +112,22 @@
       this._logoInput.addEventListener('change', function (e) {
         var f = (e.target.files && e.target.files[0]) || null;
         if (!f) return;
-        if (f.size > 1024 * 1024) App && App.toast && App.toast('Large image - consider a smaller logo', 'info');
+        var maxBytes = (App.logoStore && App.logoStore.MAX_BYTES) || (10 * 1024 * 1024);
+        if (f.size > maxBytes) {
+          self._setFieldError('logo', 'Logo must be 10 MB or smaller.');
+          e.target.value = '';
+          return;
+        }
         var reader = new FileReader();
+        reader.onerror = function () {
+          self._setFieldError('logo', 'Could not read that image file.');
+          e.target.value = '';
+        };
         reader.onload = function () {
+          self._clearFieldError('logo');
           self._data = self._data || {};
           self._data.logo = reader.result;
+          self._data.hasLogo = !!reader.result;
           self._updatePreview();
         };
         reader.readAsDataURL(f);
@@ -105,6 +137,8 @@
       this._removeBtn.addEventListener('click', function () {
         self._data = self._data || {};
         self._data.logo = '';
+        self._data.hasLogo = false;
+        self._clearFieldError('logo');
         self._updatePreview();
       });
 
@@ -113,7 +147,9 @@
           self._clearFieldError(input.getAttribute('data-field'));
         });
         input.addEventListener('blur', function () {
-          self._validateField(input.getAttribute('data-field'), true);
+          var key = input.getAttribute('data-field');
+          if (key === 'website') return;
+          self._validateField(key, true);
         });
       });
 
@@ -158,9 +194,15 @@
         return false;
       }
 
-      if (key === 'website' && value && !/^https?:\/\/.+/i.test(value)) {
-        this._setFieldError(key, 'Enter a valid URL starting with http:// or https://');
-        return false;
+      if (key === 'website' && value) {
+        if (soft) {
+          this._clearFieldError(key);
+          return true;
+        }
+        if (!isValidWebsite(value)) {
+          this._setFieldError(key, 'Enter a valid website address (e.g. example.com).');
+          return false;
+        }
       }
 
       this._clearFieldError(key);
@@ -194,11 +236,13 @@
     }
 
     getData() {
-      var out = Object.assign({}, this._data || {}, DEFAULT_DATA);
+      var out = Object.assign({}, DEFAULT_DATA, this._data || {});
       this._fields.forEach(function (input) {
         var k = input.getAttribute('data-field');
         out[k] = (input.value || '').trim();
       });
+      out.website = normalizeWebsite(out.website);
+      out.hasLogo = !!(out.logo || out.hasLogo);
       return out;
     }
 

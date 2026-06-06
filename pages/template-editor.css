@@ -45,6 +45,18 @@
   flex: 1;
 }
 
+/* Bottom save bar */
+.te2-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
 /* Shell: left rail | center | right inspector */
 .te2-shell {
   display: flex;

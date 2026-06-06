@@ -22,7 +22,11 @@ App.pages.register('business-editor', (function () {
     rootEl.querySelector('#business-editor-title').textContent = business.createdAt ? 'Edit business' : 'New business';
     rootEl.querySelector('[data-act="delete"]').style.display = business.createdAt ? '' : 'none';
     var form = rootEl.querySelector('#contact-form');
-    if (form && typeof form.setData === 'function') form.setData(business);
+    if (!form || typeof form.setData !== 'function') return;
+    App.store.ensureContactLogo(business, 'business').then(function (hydrated) {
+      business = hydrated;
+      form.setData(business);
+    });
   }
 
   function save() {
@@ -36,9 +40,12 @@ App.pages.register('business-editor', (function () {
     }
     var data = form && typeof form.getData === 'function' ? form.getData() : {};
     business = Object.assign(business || {}, data);
-    business = App.store.saveBusiness(business);
-    App.toast('Business saved', 'success');
-    App.router.navigate({ page: 'businesses' });
+    App.store.saveBusiness(business).then(function () {
+      App.toast('Business saved', 'success');
+      App.router.navigate({ page: 'businesses' });
+    }).catch(function (err) {
+      App.toast((err && err.message) || 'Could not save business', 'error');
+    });
   }
 
   function mount(root, params) {
@@ -55,9 +62,12 @@ App.pages.register('business-editor', (function () {
       if (!business.createdAt) return;
       confirmDelete(business).then(function (confirmed) {
         if (!confirmed) return;
-        App.store.deleteBusiness(business.id);
-        App.toast('Business deleted', 'info');
-        App.router.navigate({ page: 'businesses' });
+        App.store.deleteBusiness(business.id).then(function () {
+          App.toast('Business deleted', 'info');
+          App.router.navigate({ page: 'businesses' });
+        }).catch(function (err) {
+          App.toast((err && err.message) || 'Could not delete business', 'error');
+        });
       });
     });
   }

@@ -2,7 +2,6 @@
    index.js — application bootstrap
    ============================================================ */
 App.theme = (function () {
-  var KEY = 'roseltInvoiceGenerator_v1_theme';
   var mq = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)')) || null;
 
   function effective(pref) {
@@ -11,13 +10,18 @@ App.theme = (function () {
   }
 
   function get() {
-    try { var p = localStorage.getItem(KEY); return p ? p : 'system'; } catch (e) { return 'system'; }
+    if (App.idb && App.idb.isReady()) {
+      return App.idb.getKv('theme', 'system') || 'system';
+    }
+    return 'system';
   }
 
   function set(pref) {
     var eff = effective(pref);
     document.documentElement.setAttribute('data-theme', eff);
-    try { localStorage.setItem(KEY, pref); } catch (e) { }
+    if (App.idb && App.idb.isReady()) {
+      App.idb.setKv('theme', pref).catch(function () { /* ignore */ });
+    }
     App.bus.emit('theme:change', eff);
   }
 
@@ -58,10 +62,20 @@ App.theme = (function () {
       App.router.navigate({ page: 'templates' });
     });
 
-    // Ensure built-in templates are loaded before routing mounts pages
-    // (templates gallery + invoice creation expect templates to exist).
-    var p = (App.templates && typeof App.templates.ready === 'function') ? App.templates.ready() : Promise.resolve();
-    Promise.resolve(p).then(function () {
+    var tplReady = (App.templates && typeof App.templates.ready === 'function')
+      ? App.templates.ready()
+      : Promise.resolve();
+    var storeReady = (App.store && typeof App.store.ready === 'function')
+      ? App.store.ready()
+      : Promise.resolve();
+
+    Promise.all([tplReady, storeReady]).then(function () {
+      // First visit: detect locale currency and persist default settings.
+      if (App.store && typeof App.store.getSettings === 'function') App.store.getSettings();
+      App.theme.set(App.theme.get());
+      App.router.init();
+    }).catch(function (err) {
+      console.error('App failed to initialize storage', err);
       App.router.init();
     });
   }

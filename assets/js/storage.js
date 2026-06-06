@@ -1,38 +1,42 @@
 /* ============================================================
-   storage.js — localStorage persistence layer
+   storage.js — app persistence via IndexedDB (App.idb)
    ============================================================ */
 window.App = window.App || {};
 
 App.store = (function () {
-  var PREFIX = 'roseltInvoiceGenerator_v1_';
   var KEYS = {
-    settings: PREFIX + 'settings',
-    invoices: PREFIX + 'invoices',
-    templates: PREFIX + 'userTemplates',
-    clients: PREFIX + 'clients',
-    businesses: PREFIX + 'businesses',
-    counter: PREFIX + 'counter'
+    settings: 'settings',
+    invoices: 'invoices',
+    templates: 'userTemplates',
+    clients: 'clients',
+    businesses: 'businesses',
+    counter: 'counter'
   };
 
   function read(key, fallback) {
-    try {
-      var raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : fallback;
-    } catch (e) {
-      console.warn('Storage read failed for', key, e);
-      return fallback;
-    }
+    if (!App.idb.isReady()) return fallback;
+    var val = App.idb.getKv(key, undefined);
+    return val !== undefined ? val : fallback;
   }
 
   function write(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-      return true;
-    } catch (e) {
+    App.idb.setKv(key, value).catch(function (e) {
       console.error('Storage write failed for', key, e);
       App.bus && App.bus.emit('storage:error', e);
-      return false;
-    }
+    });
+    return true;
+  }
+
+  function writeAsync(key, value) {
+    return App.idb.setKv(key, value).catch(function (e) {
+      console.error('Storage write failed for', key, e);
+      App.bus && App.bus.emit('storage:error', e);
+      throw e;
+    });
+  }
+
+  function ready() {
+    return App.idb.ready();
   }
 
   /* ---------------- Settings ---------------- */
@@ -55,7 +59,11 @@ App.store = (function () {
   function getSettings() {
     var s = read(KEYS.settings, null);
     var d = defaultSettings();
-    if (!s) return d;
+    if (!s) {
+      d.defaults.currency = App.util.detectLocaleCurrency();
+      write(KEYS.settings, d);
+      return d;
+    }
     return {
       language: s.language || d.language,
       betaMode: typeof s.betaMode === 'boolean' ? s.betaMode : d.betaMode,
@@ -115,6 +123,49 @@ App.store = (function () {
     };
   }
 
+  function isInlineLogo(logo) {
+    return !!(logo && String(logo).indexOf('data:') === 0);
+  }
+
+  function hydrateContactLogo(contact, type) {
+    if (!contact) return contact;
+    if (isInlineLogo(contact.logo)) {
+      App.logoStore.prime(type, contact.id, contact.logo);
+      contact.hasLogo = true;
+      return contact;
+    }
+    if (contact.hasLogo) {
+      var cached = App.logoStore.getCached(type, contact.id);
+      if (cached !== undefined) contact.logo = cached;
+    } else {
+      contact.logo = contact.logo || '';
+    }
+    return contact;
+  }
+
+  function contactForDisk(contact) {
+    var disk = Object.assign({}, contact);
+    disk.hasLogo = !!(contact.logo || contact.hasLogo);
+    disk.logo = '';
+    return disk;
+  }
+
+  function loadContactLogo(type, id) {
+    return App.logoStore.get(type, id).then(function (url) {
+      return url || '';
+    });
+  }
+
+  function ensureContactLogo(contact, type) {
+    if (!contact) return Promise.resolve(contact);
+    if (contact.logo) return Promise.resolve(contact);
+    if (!contact.hasLogo) return Promise.resolve(contact);
+    return loadContactLogo(type, contact.id).then(function (logo) {
+      contact.logo = logo;
+      return contact;
+    });
+  }
+
   function normalizeClient(client) {
     var c = Object.assign(emptyClient(), client || {});
     c.name = c.name || '';
@@ -123,10 +174,11 @@ App.store = (function () {
     c.phone = c.phone || '';
     c.website = c.website || '';
     c.address = c.address || '';
-    c.logo = c.logo || '';
     c.taxId = c.taxId || '';
     c.notes = c.notes || '';
-    return c;
+    c.hasLogo = !!(client && (client.hasLogo || isInlineLogo(client.logo)));
+    c.logo = c.logo || '';
+    return hydrateContactLogo(c, 'client');
   }
 
   function getClients() {
@@ -140,25 +192,34 @@ App.store = (function () {
   }
 
   function saveClient(client) {
-    var list = getClients();
     var c = normalizeClient(client);
-    var idx = -1;
-    for (var i = 0; i < list.length; i++) { if (list[i].id === c.id) { idx = i; break; } }
-    c.updatedAt = new Date().toISOString();
-    if (idx >= 0) {
-      c.createdAt = c.createdAt || list[idx].createdAt || new Date().toISOString();
-      list[idx] = c;
-    } else {
-      c.createdAt = c.createdAt || new Date().toISOString();
-      list.push(c);
-    }
-    write(KEYS.clients, list);
-    return c;
+    var logoData = c.logo || '';
+    return App.logoStore.put('client', c.id, logoData).then(function () {
+      var list = read(KEYS.clients, []);
+      var idx = -1;
+      for (var i = 0; i < list.length; i++) { if (list[i].id === c.id) { idx = i; break; } }
+      c.updatedAt = new Date().toISOString();
+      c.hasLogo = !!logoData;
+      var stored = contactForDisk(c);
+      if (idx >= 0) {
+        c.createdAt = c.createdAt || list[idx].createdAt || new Date().toISOString();
+        stored.createdAt = c.createdAt;
+        list[idx] = stored;
+      } else {
+        c.createdAt = c.createdAt || new Date().toISOString();
+        stored.createdAt = c.createdAt;
+        list.push(stored);
+      }
+      stored.updatedAt = c.updatedAt;
+      return writeAsync(KEYS.clients, list).then(function () { return c; });
+    });
   }
 
   function deleteClient(id) {
-    var list = getClients().filter(function (client) { return client.id !== id; });
-    return write(KEYS.clients, list);
+    return App.logoStore.put('client', id, '').then(function () {
+      var list = read(KEYS.clients, []).filter(function (client) { return client.id !== id; });
+      return writeAsync(KEYS.clients, list);
+    });
   }
 
   /* ---------------- Businesses ---------------- */
@@ -188,9 +249,10 @@ App.store = (function () {
     b.phone = b.phone || '';
     b.website = b.website || '';
     b.taxId = b.taxId || '';
-    b.logo = b.logo || '';
     b.notes = b.notes || '';
-    return b;
+    b.hasLogo = !!(business && (business.hasLogo || isInlineLogo(business.logo)));
+    b.logo = b.logo || '';
+    return hydrateContactLogo(b, 'business');
   }
 
   function getBusinesses() {
@@ -213,25 +275,34 @@ App.store = (function () {
   }
 
   function saveBusiness(business) {
-    var list = getBusinesses();
     var b = normalizeBusiness(business);
-    var idx = -1;
-    for (var i = 0; i < list.length; i++) { if (list[i].id === b.id) { idx = i; break; } }
-    b.updatedAt = new Date().toISOString();
-    if (idx >= 0) {
-      b.createdAt = b.createdAt || list[idx].createdAt || new Date().toISOString();
-      list[idx] = b;
-    } else {
-      b.createdAt = b.createdAt || new Date().toISOString();
-      list.push(b);
-    }
-    write(KEYS.businesses, list);
-    return b;
+    var logoData = b.logo || '';
+    return App.logoStore.put('business', b.id, logoData).then(function () {
+      var list = read(KEYS.businesses, []);
+      var idx = -1;
+      for (var i = 0; i < list.length; i++) { if (list[i].id === b.id) { idx = i; break; } }
+      b.updatedAt = new Date().toISOString();
+      b.hasLogo = !!logoData;
+      var stored = contactForDisk(b);
+      if (idx >= 0) {
+        b.createdAt = b.createdAt || list[idx].createdAt || new Date().toISOString();
+        stored.createdAt = b.createdAt;
+        list[idx] = stored;
+      } else {
+        b.createdAt = b.createdAt || new Date().toISOString();
+        stored.createdAt = b.createdAt;
+        list.push(stored);
+      }
+      stored.updatedAt = b.updatedAt;
+      return writeAsync(KEYS.businesses, list).then(function () { return b; });
+    });
   }
 
   function deleteBusiness(id) {
-    var list = getBusinesses().filter(function (business) { return business.id !== id; });
-    return write(KEYS.businesses, list);
+    return App.logoStore.put('business', id, '').then(function () {
+      var list = read(KEYS.businesses, []).filter(function (business) { return business.id !== id; });
+      return writeAsync(KEYS.businesses, list);
+    });
   }
 
   /* ---------------- User templates ---------------- */
@@ -271,6 +342,7 @@ App.store = (function () {
 
   return {
     KEYS: KEYS,
+    ready: ready,
     defaultSettings: defaultSettings,
     getSettings: getSettings,
     saveSettings: saveSettings,
@@ -283,6 +355,8 @@ App.store = (function () {
     getClient: getClient,
     saveClient: saveClient,
     deleteClient: deleteClient,
+    loadContactLogo: loadContactLogo,
+    ensureContactLogo: ensureContactLogo,
     emptyBusiness: emptyBusiness,
     getBusinesses: getBusinesses,
     getBusiness: getBusiness,

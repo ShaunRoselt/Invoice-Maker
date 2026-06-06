@@ -84,6 +84,8 @@
   outline: none;
   box-shadow: 0 0 0 2px var(--brand);
   background: #fff;
+  color: #1e293b;
+  caret-color: #1e293b;
 }
 
 .a4-paper-host .doc-edit-date {
@@ -106,6 +108,8 @@
   outline: none;
   box-shadow: 0 0 0 2px var(--brand);
   background: #fff;
+  color: #1e293b;
+  caret-color: #1e293b;
 }
 
 .a4-paper-host .doc-field-empty:before {
@@ -137,6 +141,8 @@
   outline: none;
   box-shadow: inset 0 0 0 2px var(--brand);
   background: #fff;
+  color: #1e293b;
+  caret-color: #1e293b;
 }
 
 .a4-paper-host .doc-edit-cell:empty:before {

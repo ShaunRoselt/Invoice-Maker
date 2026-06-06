@@ -7,28 +7,22 @@
   .page-header .page-actions {
     flex-wrap: wrap;
   }
+
   .page-actions #tpl-search {
     width: 100% !important;
     order: -1;
   }
 }
 
-/* templates gallery — responsive grid; each card scales A4 preview to its column */
+/* templates gallery — fit as many columns as the width allows (min card ~240px) */
 .tpl-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
   gap: 24px;
 }
 
-@media (min-width: 720px) {
+@media (min-width: 900px) {
   .tpl-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1180px) {
-  .tpl-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 28px;
   }
 }

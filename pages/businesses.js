@@ -23,7 +23,7 @@ App.pages.register('businesses', (function () {
 
   function valueFor(business, key) {
     if (key === 'name') return displayName(business);
-    if (key === 'logo') return business.logo ? 'yes' : 'no';
+    if (key === 'logo') return (business.logo || business.hasLogo) ? 'yes' : 'no';
     return business[key] || '';
   }
 
@@ -54,6 +54,20 @@ App.pages.register('businesses', (function () {
   function sortHead(key, label) {
     var icon = sort.key === key ? (sort.dir === 'asc' ? 'bi-chevron-up' : 'bi-chevron-down') : 'bi-chevron-expand';
     return '<button class="sort-btn" data-sort="' + key + '">' + label + ' <i class="bi ' + icon + '"></i></button>';
+  }
+
+  function hydrateRowLogos(list) {
+    list.forEach(function (business) {
+      if (business.logo || !business.hasLogo) return;
+      App.store.loadContactLogo('business', business.id).then(function (url) {
+        if (!url) return;
+        var row = rootEl.querySelector('#business-list tr[data-id="' + business.id + '"]');
+        if (!row) return;
+        var cell = row.querySelector('.logo-col');
+        if (!cell) return;
+        cell.innerHTML = '<img class="list-logo" src="' + App.util.escapeHtml(url) + '" alt="logo">';
+      });
+    });
   }
 
   function renderList() {
@@ -106,6 +120,8 @@ App.pages.register('businesses', (function () {
       });
     });
 
+    hydrateRowLogos(list);
+
     el.querySelectorAll('tr[data-id]').forEach(function (tr) {
       var id = tr.getAttribute('data-id');
       tr.addEventListener('click', function (e) {
@@ -130,9 +146,12 @@ App.pages.register('businesses', (function () {
     if (!business) return;
     confirmDelete(business).then(function (confirmed) {
       if (!confirmed) return;
-      App.store.deleteBusiness(id);
-      renderList();
-      App.toast('Business deleted', 'info');
+      App.store.deleteBusiness(id).then(function () {
+        renderList();
+        App.toast('Business deleted', 'info');
+      }).catch(function (err) {
+        App.toast((err && err.message) || 'Could not delete business', 'error');
+      });
     });
   }
 

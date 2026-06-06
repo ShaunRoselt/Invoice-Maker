@@ -8,7 +8,7 @@
         <div class="app-header">\
           <div class="brand">\
             <button class="btn btn-ghost btn-icon menu-toggle" title="Menu"><i class="bi bi-list"></i></button>\
-            <span class="logo-mark"><i class="bi bi-receipt"></i></span>\
+            <img class="logo-mark" src="assets/img/favicon.svg" alt="Roselt Invoice Generator logo">\
             <span>Roselt Invoice Generator</span>\
           </div>\
           <div class="header-actions">\

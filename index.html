@@ -5,16 +5,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Roselt Invoice Generator</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="assets/img/favicon.png" />
 
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 
-  <!-- Apply saved theme before paint to avoid a flash -->
+  <!-- Theme applies from IndexedDB once the app loads; use system preference until then -->
   <script>
     (function () {
       try {
-        var t = localStorage.getItem('roseltInvoiceGenerator_v1_theme');
-        if (t === 'system' || !t) t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        var t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.setAttribute('data-theme', t);
       } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
     })();
@@ -44,6 +45,8 @@
 
   <!-- Core libraries (order matters; plain global scripts, no modules) -->
   <script src="assets/js/util.js"></script>
+  <script src="assets/js/idb.js"></script>
+  <script src="assets/js/logo-store.js"></script>
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/state.js"></script>
   <script src="assets/js/doc.js"></script>

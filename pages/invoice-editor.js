@@ -269,11 +269,27 @@ App.pages.register('invoice-editor', (function () {
     if (params.id) invoice = App.store.getInvoice(params.id);
     if (!invoice) {
       invoice = App.invoiceModel.createInvoice(params.template);
-      if (params.business) App.invoiceModel.applyBusiness(invoice, App.store.getBusiness(params.business));
-      if (params.client) App.invoiceModel.applyClient(invoice, App.store.getClient(params.client));
-      invoice.meta.number = App.store.nextInvoiceNumber();
-      App.store.saveInvoice(invoice);
-      App.router.navigate({ page: 'invoice-editor', id: invoice.id }, { replace: true });
+      var ready = Promise.resolve();
+      if (params.business) {
+        ready = ready.then(function () {
+          return App.store.ensureContactLogo(App.store.getBusiness(params.business), 'business');
+        }).then(function (business) {
+          if (business) App.invoiceModel.applyBusiness(invoice, business);
+        });
+      }
+      if (params.client) {
+        ready = ready.then(function () {
+          return App.store.ensureContactLogo(App.store.getClient(params.client), 'client');
+        }).then(function (client) {
+          if (client) App.invoiceModel.applyClient(invoice, client);
+        });
+      }
+      ready.then(function () {
+        invoice.meta.number = App.store.nextInvoiceNumber();
+        App.store.saveInvoice(invoice);
+        App.router.navigate({ page: 'invoice-editor', id: invoice.id }, { replace: true });
+      });
+      return;
     }
     model = invoice.templateModel || App.util.deepClone(App.templates.modelFor(invoice));
     invoice.templateModel = model;
@@ -289,10 +305,12 @@ App.pages.register('invoice-editor', (function () {
       if (!id || id === '__manual') return;
       var business = App.store.getBusiness(id);
       if (!business) return;
-      App.invoiceModel.applyBusiness(invoice, business);
-      populateBusinessSelect();
-      reRenderPaper();
-      touch();
+      App.store.ensureContactLogo(business, 'business').then(function (hydrated) {
+        App.invoiceModel.applyBusiness(invoice, hydrated);
+        populateBusinessSelect();
+        reRenderPaper();
+        touch();
+      });
     });
     root.querySelector('[data-act="manage-businesses"]').addEventListener('click', function () {
       App.router.navigate({ page: 'businesses' });
@@ -310,10 +328,12 @@ App.pages.register('invoice-editor', (function () {
       if (!id || id === '__manual') return;
       var client = App.store.getClient(id);
       if (!client) return;
-      App.invoiceModel.applyClient(invoice, client);
-      populateClientSelect();
-      reRenderPaper();
-      touch();
+      App.store.ensureContactLogo(client, 'client').then(function (hydrated) {
+        App.invoiceModel.applyClient(invoice, hydrated);
+        populateClientSelect();
+        reRenderPaper();
+        touch();
+      });
     });
     root.querySelector('[data-act="manage-clients"]').addEventListener('click', function () {
       App.router.navigate({ page: 'clients' });
@@ -348,7 +368,6 @@ App.pages.register('invoice-editor', (function () {
     var logoInput = root.querySelector('#ie-logo-input');
     logoInput.addEventListener('change', function () {
       var file = logoInput.files[0]; if (!file) return;
-      if (file.size > 1024 * 1024) App.toast('Large image — consider a smaller logo', 'info');
       var reader = new FileReader();
       reader.onload = function () { invoice.seller.logo = reader.result; invoice.businessId = ''; populateBusinessSelect(); reRenderPaper(); touch(); };
       reader.readAsDataURL(file);

@@ -6,7 +6,7 @@
 
   Built-in templates are loaded from JSON files in /templates
   using templates/manifest.json.
-  Custom templates live in localStorage and store their own model.
+  Custom templates are stored in IndexedDB and store their own model.
   ============================================================ */
 window.App = window.App || {};
 
