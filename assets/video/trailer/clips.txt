@@ -1,0 +1,8 @@
+file '/home/deck/Documents/Development/Shaun Roselt/Apps/Invoice-Maker/assets/video/trailer/clips/01_01-dashboard-overview.mp4'
+file '/home/deck/Documents/Development/Shaun Roselt/Apps/Invoice-Maker/assets/video/trailer/clips/02_02-invoices-list.mp4'
+file '/home/deck/Documents/Development/Shaun Roselt/Apps/Invoice-Maker/assets/video/trailer/clips/03_03-invoice-editor-orange-wave.mp4'
+file '/home/deck/Documents/Development/Shaun Roselt/Apps/Invoice-Maker/assets/video/trailer/clips/04_04-invoice-editor-bold-sidebar.mp4'
+file '/home/deck/Documents/Development/Shaun Roselt/Apps/Invoice-Maker/assets/video/trailer/clips/05_05-clients-directory.mp4'
+file '/home/deck/Documents/Development/Shaun Roselt/Apps/Invoice-Maker/assets/video/trailer/clips/06_06-business-profiles.mp4'
+file '/home/deck/Documents/Development/Shaun Roselt/Apps/Invoice-Maker/assets/video/trailer/clips/07_07-templates-gallery.mp4'
+file '/home/deck/Documents/Development/Shaun Roselt/Apps/Invoice-Maker/assets/video/trailer/clips/08_08-invoice-editor-modern.mp4'

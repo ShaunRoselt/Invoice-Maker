@@ -1,0 +1,68 @@
+{
+  "createdAt": "2026-06-06T20:24:37.481Z",
+  "screenshotsDir": "assets/img/screenshots",
+  "outputVideo": "trailer.mp4",
+  "resolution": "1920x1080",
+  "fps": 60,
+  "totalDurationSeconds": 60,
+  "videoCodec": "h264",
+  "audioCodec": "aac",
+  "shots": [
+    {
+      "id": "01_01-dashboard-overview",
+      "title": "01-dashboard-overview",
+      "durationSeconds": 7.5,
+      "sourcePath": "assets/img/screenshots/01-dashboard-overview.png",
+      "clip": "clips/01_01-dashboard-overview.mp4"
+    },
+    {
+      "id": "02_02-invoices-list",
+      "title": "02-invoices-list",
+      "durationSeconds": 7.5,
+      "sourcePath": "assets/img/screenshots/02-invoices-list.png",
+      "clip": "clips/02_02-invoices-list.mp4"
+    },
+    {
+      "id": "03_03-invoice-editor-orange-wave",
+      "title": "03-invoice-editor-orange-wave",
+      "durationSeconds": 7.5,
+      "sourcePath": "assets/img/screenshots/03-invoice-editor-orange-wave.png",
+      "clip": "clips/03_03-invoice-editor-orange-wave.mp4"
+    },
+    {
+      "id": "04_04-invoice-editor-bold-sidebar",
+      "title": "04-invoice-editor-bold-sidebar",
+      "durationSeconds": 7.5,
+      "sourcePath": "assets/img/screenshots/04-invoice-editor-bold-sidebar.png",
+      "clip": "clips/04_04-invoice-editor-bold-sidebar.mp4"
+    },
+    {
+      "id": "05_05-clients-directory",
+      "title": "05-clients-directory",
+      "durationSeconds": 7.5,
+      "sourcePath": "assets/img/screenshots/05-clients-directory.png",
+      "clip": "clips/05_05-clients-directory.mp4"
+    },
+    {
+      "id": "06_06-business-profiles",
+      "title": "06-business-profiles",
+      "durationSeconds": 7.5,
+      "sourcePath": "assets/img/screenshots/06-business-profiles.png",
+      "clip": "clips/06_06-business-profiles.mp4"
+    },
+    {
+      "id": "07_07-templates-gallery",
+      "title": "07-templates-gallery",
+      "durationSeconds": 7.5,
+      "sourcePath": "assets/img/screenshots/07-templates-gallery.png",
+      "clip": "clips/07_07-templates-gallery.mp4"
+    },
+    {
+      "id": "08_08-invoice-editor-modern",
+      "title": "08-invoice-editor-modern",
+      "durationSeconds": 7.5,
+      "sourcePath": "assets/img/screenshots/08-invoice-editor-modern.png",
+      "clip": "clips/08_08-invoice-editor-modern.mp4"
+    }
+  ]
+}
