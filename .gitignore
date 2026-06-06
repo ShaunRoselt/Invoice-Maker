@@ -7,6 +7,6 @@ Thumbs.db
 # Runtime artifacts
 *.log
 
-# Ensure generated videos are tracked
-!assets/video/
-!assets/video/**
+# Ignore generated video outputs
+assets/video/trailer/
+*.mp4
