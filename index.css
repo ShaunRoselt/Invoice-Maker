@@ -1062,6 +1062,7 @@ app-sidebar {
    the preview component.) */
 .invoice-paper {
   width: 794px;
+  height: 1123px;
   min-height: 1123px;
   background: #ffffff;
   overflow: hidden;

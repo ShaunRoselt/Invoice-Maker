@@ -127,8 +127,18 @@ App.doc = (function () {
   function wrapperCss(style) {
     style = style || {};
     var css = '';
-    css += 'margin-top:' + (style.marginTop != null ? style.marginTop : 0) + 'px;';
-    css += 'margin-bottom:' + (style.marginBottom != null ? style.marginBottom : 12) + 'px;';
+    if (style.marginTop != null) {
+      if (typeof style.marginTop === 'string') css += 'margin-top:' + style.marginTop + ';';
+      else css += 'margin-top:' + style.marginTop + 'px;';
+    } else {
+      css += 'margin-top:0px;';
+    }
+    if (style.marginBottom != null) {
+      if (typeof style.marginBottom === 'string') css += 'margin-bottom:' + style.marginBottom + ';';
+      else css += 'margin-bottom:' + style.marginBottom + 'px;';
+    } else {
+      css += 'margin-bottom:12px;';
+    }
     if (style.bg) css += 'background:' + style.bg + ';';
     if (style.padding != null) css += 'padding:' + lenVal(style.padding) + ';';
     if (style.radius != null) css += 'border-radius:' + lenVal(style.radius) + ';';
@@ -429,10 +439,15 @@ App.doc = (function () {
     var paper = document.createElement('div');
     paper.className = 'doc-paper';
     paper.setAttribute('data-container', 'root');
+    paper.style.boxSizing = 'border-box';
     paper.style.fontFamily = page.fontFamily || '"Segoe UI", Helvetica, Arial, sans-serif';
     paper.style.color = page.color || '#1f2937';
     paper.style.padding = (page.padding != null ? page.padding : 48) + 'px';
     paper.style.background = page.background || '#ffffff';
+    paper.style.display = 'flex';
+    paper.style.flexDirection = 'column';
+    paper.style.minHeight = '100%';
+    paper.style.height = '100%';
     (model.blocks || []).forEach(function (b) { paper.appendChild(renderBlock(b, ctx, opts.editable)); });
     return paper;
   }

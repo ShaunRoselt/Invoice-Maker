@@ -306,7 +306,8 @@
           "bg": "#ED5A2D",
           "padding": "28px",
           "radius": "120px 0 0 0",
-          "marginTop": 26
+          "marginTop": "auto",
+          "marginBottom": 0
         }
       }
     ]

@@ -29,7 +29,20 @@ App.templates = (function () {
     builtIn[def.id] = def;
   }
 
-  function normalizeModel(model) {
+  function applyKnownModelFixes(model, templateId) {
+    if (!model || templateId !== 'orange-wave') return model;
+    var blocks = Array.isArray(model.blocks) ? model.blocks : [];
+    var footer = blocks.length ? blocks[blocks.length - 1] : null;
+    if (!footer || footer.type !== 'text') return model;
+    footer.style = footer.style || {};
+    if (String(footer.style.bg || '').toLowerCase() !== '#ed5a2d') return model;
+    if (String(footer.style.radius || '') !== '120px 0 0 0') return model;
+    footer.style.marginTop = 'auto';
+    footer.style.marginBottom = 0;
+    return model;
+  }
+
+  function normalizeModel(model, templateId) {
     model = model || App.doc.defaultModel();
     model.page = model.page || {};
     model.blocks = Array.isArray(model.blocks) ? model.blocks : [];
@@ -53,7 +66,7 @@ App.templates = (function () {
     }
 
     walk(model.blocks);
-    return model;
+    return applyKnownModelFixes(model, templateId);
   }
 
   function loadBuiltIns() {
@@ -74,7 +87,7 @@ App.templates = (function () {
             .then(function (r) { if (!r.ok) throw new Error('Failed to fetch ' + url); return r.json(); })
             .then(function (def) {
               if (!def || !def.id) return;
-              if (def.model) def.model = normalizeModel(def.model);
+              if (def.model) def.model = normalizeModel(def.model, def.id);
               register(def);
             })
             .catch(function (e) {
@@ -112,11 +125,11 @@ App.templates = (function () {
   // prefer the snapshot stored on the invoice, then the template,
   // then any template, then a default.
   function modelFor(invoice) {
-    if (invoice && invoice.templateModel) return invoice.templateModel;
+    if (invoice && invoice.templateModel) return normalizeModel(invoice.templateModel, invoice.templateId);
     var tpl = get(invoice && invoice.templateId);
-    if (tpl && tpl.model) return tpl.model;
+    if (tpl && tpl.model) return normalizeModel(tpl.model, tpl.id);
     var all = getAll();
-    if (all[0] && all[0].model) return all[0].model;
+    if (all[0] && all[0].model) return normalizeModel(all[0].model, all[0].id);
     return App.doc.defaultModel();
   }
 
