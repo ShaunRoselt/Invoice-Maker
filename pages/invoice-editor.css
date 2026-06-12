@@ -145,6 +145,7 @@
   caret-color: #1e293b;
 }
 
+.a4-paper-host .doc-edit-cell.doc-cell-empty:before,
 .a4-paper-host .doc-edit-cell:empty:before {
   content: attr(data-placeholder);
   color: #c2c9d4;

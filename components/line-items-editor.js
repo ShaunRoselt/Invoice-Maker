@@ -48,9 +48,9 @@
         var amount = (Number(li.qty) || 0) * (Number(li.rate) || 0);
         return '\
           <tr data-idx="' + idx + '">\
-            <td><input class="li-input" data-f="description" placeholder="Item description" value="' + App.util.escapeHtml(li.description) + '"></td>\
-            <td class="col-qty"><input class="li-input num" data-f="qty" type="number" min="0" step="any" value="' + App.util.escapeHtml(li.qty) + '"></td>\
-            <td class="col-rate"><input class="li-input num" data-f="rate" type="number" min="0" step="any" value="' + App.util.escapeHtml(li.rate) + '"></td>\
+            <td><input class="li-input" data-f="description" placeholder="item description" value="' + App.util.escapeHtml(li.description) + '"></td>\
+            <td class="col-qty"><input class="li-input num" data-f="qty" type="number" min="0" step="any" placeholder="qty" value="' + App.util.escapeHtml(li.qty) + '"></td>\
+            <td class="col-rate"><input class="li-input num" data-f="rate" type="number" min="0" step="any" placeholder="rate" value="' + App.util.escapeHtml(li.rate) + '"></td>\
             <td class="col-amt amount js-amount">' + App.util.formatMoney(amount, cur) + '</td>\
             <td class="col-x"><button class="li-remove" title="Remove row"><i class="bi bi-x-lg"></i></button></td>\
           </tr>';

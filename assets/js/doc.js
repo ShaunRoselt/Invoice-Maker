@@ -318,9 +318,13 @@ App.doc = (function () {
 
     var table = document.createElement('table');
     table.className = 'doc-items' + (zebra ? ' zebra' : '') + (de ? ' doc-edit-items' : '');
-    var thead = '<thead><tr>' + cols.map(function (c) {
-      return '<th class="' + (numeric[c.key] ? 'r' : '') + '" style="background:' + headerBg + ';color:' + headerColor + '">' +
-        App.util.escapeHtml(c.label) + '</th>';
+    var thead = '<thead><tr>' + cols.map(function (c, idx) {
+      var cls = numeric[c.key] ? 'r' : '';
+      var labelHtml = App.util.escapeHtml(c.label || '');
+      if (de && canEditStatic(ctx, c.label)) {
+        return '<th class="' + cls + ' doc-edit-static" contenteditable="true" data-static="label" data-col-key="' + App.util.escapeHtml(c.key) + '" style="background:' + headerBg + ';color:' + headerColor + '">' + labelHtml + '</th>';
+      }
+      return '<th class="' + cls + '" style="background:' + headerBg + ';color:' + headerColor + '">' + labelHtml + '</th>';
     }).join('') + (de ? '<th class="doc-x-col" style="background:' + headerBg + '"></th>' : '') + '</tr></thead>';
 
     // In output (non-edit) mode, drop blank rows so a fresh invoice
@@ -340,7 +344,12 @@ App.doc = (function () {
           if (c.key === 'description') rawv = li.description || '';
           else if (c.key === 'amount') rawv = amt;
           else rawv = (li[c.key] != null ? li[c.key] : '');
-          return '<td class="' + cls + ' doc-edit-cell" contenteditable="true" data-li="' + li.id + '" data-col="' + c.key + '" data-placeholder="' + (c.key === 'description' ? 'Item description' : '0') + '">' + App.util.escapeHtml(rawv) + '</td>';
+          var placeholder;
+          if (c.label) placeholder = String(c.label).toLowerCase();
+          else if (c.key === 'description') placeholder = 'item description';
+          else placeholder = '0';
+          var isEmpty = (rawv == null || String(rawv).trim() === '');
+          return '<td class="' + cls + ' doc-edit-cell' + (isEmpty ? ' doc-cell-empty' : '') + '" contenteditable="true" data-li="' + li.id + '" data-col="' + c.key + '" data-placeholder="' + App.util.escapeHtml(placeholder) + '">' + App.util.escapeHtml(rawv) + '</td>';
         }
         var v;
         if (c.key === 'description') v = App.util.escapeHtml(li.description || '');

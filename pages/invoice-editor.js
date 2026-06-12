@@ -142,9 +142,15 @@ App.pages.register('invoice-editor', (function () {
   function wireCanvas() {
     var host = paperHost();
 
+    function syncCellPlaceholder(cell) {
+      if (!cell || !cell.classList) return;
+      cell.classList.toggle('doc-cell-empty', cell.innerText.trim() === '');
+    }
+
     host.addEventListener('input', function (e) {
       var cell = e.target.closest && e.target.closest('[data-li]');
       if (cell) {
+        syncCellPlaceholder(cell);
         var li = getLi(cell.getAttribute('data-li')); if (!li) return;
         var col = cell.getAttribute('data-col');
         if (col === 'description') li.description = cell.innerText;
@@ -158,7 +164,39 @@ App.pages.register('invoice-editor', (function () {
       if (stat) {
         var blk = stat.closest('.doc-blk'); if (!blk) return;
         var f = App.doc.findBlock(model, blk.getAttribute('data-id')); if (!f) return;
-        if (stat.getAttribute('data-static') === 'label') f.block.props.label = stat.innerText;
+        // Editable static labels inside an items block update the corresponding
+        // column label (identified by data-col-key). Fall back to the generic
+        // block label/text handling for other block types.
+        var ds = stat.getAttribute('data-static');
+        if (f.block.type === 'items' && stat.hasAttribute('data-col-key')) {
+          var colKey = stat.getAttribute('data-col-key');
+          f.block.props.columns = f.block.props.columns && f.block.props.columns.length ? f.block.props.columns : App.doc.ITEM_DEFAULT_COLS.slice();
+          var found = (f.block.props.columns || []).filter(function (c) { return c.key === colKey; })[0];
+          if (found) found.label = stat.innerText;
+          else {
+            var idx = parseInt(stat.getAttribute('data-col-index'), 10);
+            if (!isNaN(idx)) {
+              f.block.props.columns[idx] = f.block.props.columns[idx] || { key: colKey, label: stat.innerText };
+            }
+          }
+          // Update placeholders in the live DOM for any empty cells in this items block
+          var newPlaceholder;
+          if (found && found.label) newPlaceholder = String(found.label).toLowerCase();
+          else newPlaceholder = (colKey === 'description') ? 'item description' : '0';
+          try {
+            var host = paperHost();
+            var blkEl = host.querySelector('.doc-blk[data-id="' + f.block.id + '"]');
+            if (blkEl) {
+              blkEl.querySelectorAll('[data-col="' + colKey + '"]').forEach(function (td) {
+                td.setAttribute('data-placeholder', newPlaceholder);
+                syncCellPlaceholder(td);
+              });
+            }
+          } catch (e) { /* ignore DOM update errors */ }
+          touch();
+          return;
+        }
+        if (ds === 'label') f.block.props.label = stat.innerText;
         else f.block.props.text = stat.innerText;
         touch();
         return;
